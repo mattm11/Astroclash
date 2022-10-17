@@ -6,12 +6,13 @@ using Astroclash;
 public class bulletWeapon : MonoBehaviour
 {
     //Bullet aspects that can change (defaults)
-    private float fireRate = 10.0f;               //Rounds per second
+    private float fireRate = 10.0f;         //Rounds per second
     private float fireSpread = 0.2f;        //Angle of spread in radians
-    private float projectileSpeed = 10.0f;   //Projectile speed in units/second
-    private float projectileDamage = 1.0f;       //Damage each projectile deals
-    private float projectileRange = 20.0f;   //Projectile range until destroyed
-    private float projectileCount = 1.0f;        //Count of projectiles fired
+    private float projectileSpeed = 10.0f;  //Projectile speed in units/second
+    private float projectileDamage = 1.0f;  //Damage each projectile deals
+    private float projectileRange = 20.0f;  //Projectile range until destroyed
+    private float projectileCount = 1.0f;   //Count of projectiles fired
+    private float burstTime = 0.33f;        //Time between shots in a burst in seconds
     public GameObject bulletPref;
     private List<float> weaponStats = new List<float>();
     private List<string> statNames = new List<string>()
@@ -21,11 +22,14 @@ public class bulletWeapon : MonoBehaviour
         "Projectile Speed",
         "Projectile Damage",
         "Projectile Range",
-        "Projectile Count"
+        "Projectile Count",
+        "Burst Timing"
     };
     private weaponDebugUI debugUI;
     private bool debug = false;
+    private bool burst = false;
     private float sumDeltaTime = 0.0f;
+    private float burstCount = 0.0f;
 
     //weapon type flags (behavior flags)
     public bool isSniper = false;
@@ -39,6 +43,7 @@ public class bulletWeapon : MonoBehaviour
         weaponStats.Add(projectileDamage);
         weaponStats.Add(projectileRange);
         weaponStats.Add(projectileCount);
+        weaponStats.Add(burstTime);
 
         debugUI = new weaponDebugUI(weaponStats, statNames, this.GetComponent<bulletWeapon>());    
     }
@@ -48,6 +53,7 @@ public class bulletWeapon : MonoBehaviour
     {
         //just simulates the rotation of player characters (not needed for the actual weapon) 
         rotatePlayer();
+        shootSniper(); //controls burst
 
         if (Input.GetMouseButton(0))
         {
@@ -59,7 +65,7 @@ public class bulletWeapon : MonoBehaviour
         {
             Vector3 mousePosition = new Vector3(Input.mousePosition.x, Input.mousePosition.y, Camera.main.nearClipPlane);
             Vector3 mouseRealtivePosition = Camera.main.ScreenToWorldPoint(mousePosition);
-            if (isMachinegun != true)
+            if (isMachinegun != true && isShotgun != true)
                 Debug.DrawLine(transform.position, mouseRealtivePosition, Color.red);
             drawAngle(fireSpread);
             setWeaponStats();
@@ -166,18 +172,47 @@ public class bulletWeapon : MonoBehaviour
                     bullet.GetComponent<bulletProjectiles>().setStats(projectileRange, projectileDamage);
                 }
             }
+            //sniper path logic
+            else if (isSniper && burst == false)
+            {
+                burst = true;
+            }
             //shotgun path logic
             else if (isShotgun)
             {
+                for (int i = 0; i < projectileCount; i++)
+                {
+                    //randomize vector direction to fire based on spread angle
+                    float randomAngle = Random.Range(-fireSpread/2, fireSpread/2);
+                    Vector3 fireVector = rotateVector(transform.right, randomAngle);
 
-            }
-            //sniper path logic
-            else if (isSniper)
-            {
+                    GameObject bullet = Instantiate(bulletPref, transform.position, transform.rotation);
+                    bullet.GetComponent<Rigidbody2D>().AddForce(fireVector * projectileSpeed, ForceMode2D.Impulse);
+                    bullet.GetComponent<bulletProjectiles>().setStats(projectileRange, projectileDamage);
+                }
+                for (int i = 0; i < projectileCount/2; i++)
+                {
+                    //randomize vector direction to fire based on spread angle
+                    float randomAngle = Random.Range(-fireSpread/2, fireSpread/2);
+                    Vector3 fireVector = rotateVector(transform.right, randomAngle);
 
+                    GameObject bullet = Instantiate(bulletPref, transform.position, transform.rotation);
+                    bullet.GetComponent<Rigidbody2D>().AddForce(fireVector * projectileSpeed * 0.8f, ForceMode2D.Impulse);
+                    bullet.GetComponent<bulletProjectiles>().setStats(projectileRange, projectileDamage);
+                }
+                for (int i = 0; i < projectileCount/4; i++)
+                {
+                    //randomize vector direction to fire based on spread angle
+                    float randomAngle = Random.Range(-fireSpread/2, fireSpread/2);
+                    Vector3 fireVector = rotateVector(transform.right, randomAngle);
+
+                    GameObject bullet = Instantiate(bulletPref, transform.position, transform.rotation);
+                    bullet.GetComponent<Rigidbody2D>().AddForce(fireVector * projectileSpeed * 0.6f, ForceMode2D.Impulse);
+                    bullet.GetComponent<bulletProjectiles>().setStats(projectileRange, projectileDamage);
+                }
             }
             //basic gun logic
-            else
+            else if (burst == false)
             {
                 for (int i = 0; i < projectileCount; i++)
                 {
@@ -195,6 +230,34 @@ public class bulletWeapon : MonoBehaviour
             sumDeltaTime = 0;
         }
     }
+    void shootSniper()
+    {
+        sumDeltaTime += Time.deltaTime;
+
+        if (burst && isSniper)
+        {
+            if (sumDeltaTime >= burstTime && burstCount < projectileCount)
+            {
+                Debug.Log("Firing burst");
+                //create bullet and send it
+                GameObject bullet = Instantiate(bulletPref, transform.position, transform.rotation);
+                bullet.GetComponent<Rigidbody2D>().AddForce(transform.right * projectileSpeed, ForceMode2D.Impulse);
+                bullet.GetComponent<bulletProjectiles>().setStats(projectileRange, projectileDamage);
+                //reset sum delta
+                sumDeltaTime = 0.0f;
+                //increment burst count
+                burstCount++;
+            }
+            else if (burstCount >= projectileCount)
+            {
+                Debug.Log("burst ended");
+                //set burst count to zero
+                burstCount = 0.0f;
+                //set burst to false
+                burst = false;
+            }
+        }
+    }
     // Debug functions
     void drawAngle(float _angle)
     {
@@ -205,8 +268,11 @@ public class bulletWeapon : MonoBehaviour
         Vector3 point1 = rotateVector(mouseRealtivePosition, halfSpread);
         Vector3 point2 = rotateVector(mouseRealtivePosition, -halfSpread);
 
-        Debug.DrawLine(transform.position, point1, Color.yellow);
-        Debug.DrawLine(transform.position, point2, Color.yellow);
+        if (isSniper == false)
+        {
+            Debug.DrawLine(transform.position, point1, Color.yellow);
+            Debug.DrawLine(transform.position, point2, Color.yellow);
+        }
 
         //debug mode
         if (isMachinegun)
@@ -266,7 +332,8 @@ public class bulletWeapon : MonoBehaviour
         projectileSpeed = float.Parse(input[2]);   
         projectileDamage = float.Parse(input[3]);       
         projectileRange = float.Parse(input[4]);   
-        projectileCount = float.Parse(input[5]);        
+        projectileCount = float.Parse(input[5]);  
+        burstTime = float.Parse(input[6]);      
     }
 
     private Vector3 rotateVector(Vector3 vector, float angle)
