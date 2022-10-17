@@ -6,7 +6,7 @@ using Astroclash;
 public class bulletWeapon : MonoBehaviour
 {
     //Bullet aspects that can change (defaults)
-    private float fireRate = 10.0f;         //Rounds per second
+    private float fireRate = 3.0f;         //Rounds per second
     private float fireSpread = 0.2f;        //Angle of spread in radians
     private float projectileSpeed = 10.0f;  //Projectile speed in units/second
     private float projectileDamage = 1.0f;  //Damage each projectile deals
@@ -14,6 +14,11 @@ public class bulletWeapon : MonoBehaviour
     private float projectileCount = 1.0f;   //Count of projectiles fired
     private float burstTime = 0.33f;        //Time between shots in a burst in seconds
     public GameObject bulletPref;
+
+    public int damageUpgrades = 0;
+    public int spreadUpgrades = 0;
+    public int countUpgrades = 0;
+
     private List<float> weaponStats = new List<float>();
     private List<string> statNames = new List<string>()
     {
@@ -35,6 +40,8 @@ public class bulletWeapon : MonoBehaviour
     public bool isSniper = false;
     public bool isMachinegun = false;
     public bool isShotgun = false;
+    
+    //Weapon Logic
     void Start()
     {
         weaponStats.Add(fireRate);
@@ -47,12 +54,8 @@ public class bulletWeapon : MonoBehaviour
 
         debugUI = new weaponDebugUI(weaponStats, statNames, this.GetComponent<bulletWeapon>());    
     }
-
-    // Update is called once per frame
     void Update()
     {
-        //just simulates the rotation of player characters (not needed for the actual weapon) 
-        rotatePlayer();
         shootSniper(); //controls burst
 
         if (Input.GetMouseButton(0))
@@ -85,16 +88,6 @@ public class bulletWeapon : MonoBehaviour
 
             debugUI.toggle();
         }
-    }
-
-    void rotatePlayer()
-    {
-        Vector3 mousePosition = new Vector3(Input.mousePosition.x, Input.mousePosition.y, Camera.main.nearClipPlane);
-        Vector3 mouseRealtivePosition = Camera.main.ScreenToWorldPoint(mousePosition);
-        Vector3 direction = mouseRealtivePosition - transform.position;
-        float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
-        Quaternion rotation = Quaternion.AngleAxis(angle, transform.forward);
-        transform.rotation = rotation;
     }
     void shoot()
     {
@@ -258,6 +251,7 @@ public class bulletWeapon : MonoBehaviour
             }
         }
     }
+    
     // Debug functions
     void drawAngle(float _angle)
     {
@@ -335,7 +329,8 @@ public class bulletWeapon : MonoBehaviour
         projectileCount = float.Parse(input[5]);  
         burstTime = float.Parse(input[6]);      
     }
-
+    
+    // Helper Functions
     private Vector3 rotateVector(Vector3 vector, float angle)
     {
         Vector3 transVector = new Vector3(
@@ -345,5 +340,36 @@ public class bulletWeapon : MonoBehaviour
         );
 
         return transVector;
+    }
+
+    public void upgradeDamage(float amount)
+    {
+        projectileDamage += amount;
+        damageUpgrades++;
+    }
+    public void upgradeSpread(float amount)
+    {
+        fireSpread += amount;
+        spreadUpgrades++;
+    }
+    public void upgradeCount(float amount)
+    {
+        projectileCount += amount;
+        countUpgrades++;
+    }
+
+    public void setSniper()
+    {
+        isSniper = true;
+    }
+
+    public void setMachinegun()
+    {
+        isMachinegun = true;
+    }
+
+    public void setShotgun()
+    {
+        isShotgun = true;
     }
 }
