@@ -6,14 +6,18 @@ using Unity.Netcode;
 public class PlayerUI : NetworkBehaviour
 {
     public int maxHealth = 100;
-    public int currentHealth;
+    public NetworkVariable<int> currentHealth = new NetworkVariable<int>();
 
-    public HealthBar healthBar;
+    //public HealthBar healthBar;
+    public GameObject healthBar;
+    public HealthBar playerHealth;
 
     void Start()
     {
-        currentHealth = maxHealth;
-        healthBar.SetMaxHealth(maxHealth);
+        healthBar = GameObject.Find("Health bar");
+        playerHealth = healthBar.GetComponent<HealthBar>();
+        currentHealth.Value = maxHealth;
+        playerHealth.SetMaxHealth(maxHealth);
     }
 
     void Update()
@@ -22,24 +26,13 @@ public class PlayerUI : NetworkBehaviour
         {
             TakeDamage(20);
         }
-    }
-
-    [ClientRpc]
-    void UpdateHealthClientRpc()
-    {
-        if (IsServer)
-            return;
-
-        healthBar.SetHealth(currentHealth);
+        playerHealth.SetHealth(currentHealth.Value);
     }
 
     void TakeDamage(int damage)
     {
-        currentHealth -= damage;
+        currentHealth.Value -= damage;
 
-        healthBar.SetHealth(currentHealth);
-
-        UpdateHealthClientRpc();
-
+        playerHealth.SetHealth(currentHealth.Value);
     }
 }
