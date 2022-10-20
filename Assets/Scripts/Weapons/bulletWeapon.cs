@@ -77,7 +77,7 @@ public class bulletWeapon : MonoBehaviour
     public GameObject weaponUIButton;
     
     // Weapon Controller
-    public WeaponController controller;
+    private WeaponController controller;
 
     
     
@@ -110,6 +110,7 @@ public class bulletWeapon : MonoBehaviour
         controller.registerUpgradeUIButton(weaponUIButton);
     }
     
+    // Gun Specific Code
     void Update()
     {
         burstStep(); //controls burst logic
@@ -127,9 +128,8 @@ public class bulletWeapon : MonoBehaviour
                 Debug.DrawLine(transform.position, mouseRealtivePosition, Color.red);
             drawAngle(controller.getStat("Shot Spread"));
         }
-    }
-    
-    // Does the shooting logic
+    }    
+    // shooting logic
     void shoot()
     {
         sumDeltaTime += Time.deltaTime;
@@ -271,9 +271,8 @@ public class bulletWeapon : MonoBehaviour
             //set time to fire
             sumDeltaTime = 0;
         }
-    }
-    
-    // Debug functions
+    }   
+    // draws debug lines
     void drawAngle(float _angle)
     {
         float halfSpread = _angle / 2;
@@ -336,8 +335,7 @@ public class bulletWeapon : MonoBehaviour
             }
         }
 
-    }
-    
+    }    
     //handles burst logic per frame
     void burstStep()
     {
@@ -368,7 +366,6 @@ public class bulletWeapon : MonoBehaviour
             }
         }
     }
-    
     private Vector3 rotateVector(Vector3 vector, float angle)
     {
         Vector3 transVector = new Vector3(

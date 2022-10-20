@@ -198,12 +198,12 @@ namespace Astroclash
         {
             stateRequirements.Add(_stateName, _requirement);
         }
-        private void lockStateButton(GameObject _state)
+        public void lockStateButton(GameObject _button)
         {
-            Image image = _state.GetComponent<Image>();
+            Image image = _button.GetComponent<Image>();
             image.color = new Color( 0.0f, 1.0f, 0.0f, 1.0f);
 
-            _state.GetComponent<Button>().enabled = false;  
+            _button.GetComponent<Button>().enabled = false;  
         }
         private void checkStates()
         {
@@ -281,7 +281,7 @@ namespace Astroclash
         {
             upgradeUIButton = _ui;
         }
-        private void enableButton(GameObject _button)
+        public void enableButton(GameObject _button)
         {
             Image image = _button.GetComponent<Image>();
             image.color = new Color(
@@ -293,7 +293,7 @@ namespace Astroclash
 
             _button.GetComponent<Button>().enabled = true;
         }
-        private void disableButton(GameObject _button)
+        public void disableButton(GameObject _button)
         {
             Image image = _button.GetComponent<Image>();
             image.color = new Color(
