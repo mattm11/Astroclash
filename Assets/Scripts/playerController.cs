@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Unity.Netcode;
 using System;
+using TMPro;
 
 public class playerController : NetworkBehaviour
 {
@@ -12,16 +13,59 @@ public class playerController : NetworkBehaviour
     //maximum speed of player ship
     private float maxVelocity = 3.0f;
     private float velocity = 0.0f;
-    //speed at which they can rotate (45 degrees per second)
-    private Vector3 rotationAcceleration = new Vector3(0.0f, 0.0f, 90.0f);
     private Vector3 rotationDieOff = new Vector3(0.0f, 0.0f, 0.0f);
+
+    public GameObject UILogic;
+    private GameObject canvas;
+    private GameObject eventSystem;
+    private GameObject bulletweaponObject;
+    private GameObject bulletUpgradeUI;
+    private GameObject spaceStationUI;
+    private GameObject spaceStationButton;
 
     private Camera playerCamera;
 
     void Start()
     {
-        GameObject parent = gameObject.transform.parent.gameObject;
-        playerCamera = parent.GetComponentInChildren<Camera>();
+        if (IsOwner)
+        {
+            GameObject parent = gameObject.transform.parent.gameObject;
+            playerCamera = parent.GetComponentInChildren<Camera>();
+
+            //Find canvas/even system
+            canvas = gameObject.transform.Find("Canvas").gameObject;
+            eventSystem = gameObject.transform.Find("EventSystem").gameObject;
+
+            spaceStationUI = canvas.transform.Find("Space Station UI").gameObject;
+            spaceStationButton = canvas.transform.Find("Space UI Button").gameObject;
+
+            //Find weapon objects
+            bulletweaponObject = gameObject.transform.Find("BulletWeapon").gameObject;
+
+            //Find weapon object UI
+            bulletUpgradeUI = canvas.transform.Find("BulletUpgradeUI").gameObject;
+
+            bulletweaponObject.GetComponent<bulletWeapon>().setUpgradeUI(bulletUpgradeUI);
+            bulletweaponObject.GetComponent<bulletWeapon>().setCanvas(canvas);  //Sets the canvas object to draw debug
+
+            //Find the UILogic object
+            UILogic = canvas.transform.Find("UILogic").gameObject;
+
+            //setup and turn off canvas and event system
+            canvas.transform.SetParent(null);
+            eventSystem.transform.SetParent(null);
+
+            // turn off UI elements by default
+            spaceStationUI.SetActive(false);
+            spaceStationButton.SetActive(false);
+            bulletUpgradeUI.SetActive(false);
+        }
+        else
+        {
+            GameObject.Destroy(gameObject.transform.Find("Canvas").gameObject);
+            GameObject.Destroy(gameObject.transform.Find("EventSystem").gameObject);
+        }
+        
     }
     
     // Update is called once per frame
@@ -34,10 +78,6 @@ public class playerController : NetworkBehaviour
             newPosition.x = gameObject.transform.position.x;
             newPosition.y = gameObject.transform.position.y;
             playerCamera.transform.position= newPosition;
-
-            Debug.Log("Current Rotation: " + transform.eulerAngles.z);
-            Debug.Log("Current X: " + velocity * (float)Math.Cos(transform.eulerAngles.z));
-            Debug.Log("Current Y: " + velocity * (float)Math.Sin(transform.eulerAngles.z));
 
             //Movement is broken down into: X = Movement_Speed * cos(rotation_angle) Y = Movement_Speed * sin(rotation_angle)
             float angle = (float)(transform.eulerAngles.z * (Math.PI / 180));
@@ -77,16 +117,26 @@ public class playerController : NetworkBehaviour
                     velocity = 0.0f;
                 }
             }
-            
-            if (Input.GetKey(KeyCode.A))
-            {
-                transform.Rotate(rotationAcceleration * Time.deltaTime);
-                
-            }
-            else if (Input.GetKey(KeyCode.D))
-            {
-                transform.Rotate(-rotationAcceleration * Time.deltaTime);
-            }
         }
+    }
+
+    private void OnTriggerEnter2D(Collider2D collider)
+    {
+        if (IsOwner)
+        {
+            if (collider.gameObject.name == "Space Station")
+                UILogic.GetComponent<UIRegistrar>().enableIndex(0);
+        }
+       
+    }
+
+    private void OnTriggerExit2D(Collider2D collider)
+    {
+        if (IsOwner)
+        {
+            if (collider.gameObject.name == "Space Station")
+            UILogic.GetComponent<UIRegistrar>().disableAll();
+        }
+        
     }
 }

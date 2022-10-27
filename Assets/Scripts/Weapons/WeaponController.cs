@@ -28,9 +28,8 @@ namespace Astroclash
 
             public bool toggleFlag = false;
 
-            public WeaponDebugUI(List<float> _stats, List<string> names)
+            public WeaponDebugUI(List<float> _stats, List<string> names, GameObject canvas)
             {
-                GameObject canvas = GameObject.Find("Canvas");
                 Object prefab = Resources.Load("prefabs/UIModule");
 
                 for (int i = 0; i < _stats.Count; i++)
@@ -44,7 +43,6 @@ namespace Astroclash
                     modules.Add(module);
                 }
             }
-
             public void toggle()
             {
                 if (toggleFlag)
@@ -66,7 +64,6 @@ namespace Astroclash
                     Debug.Log("Debug mode on");
                 }
             }
-
             public List<float> getInput()
             {
                 List<float> inputs = new List<float>();
@@ -77,7 +74,6 @@ namespace Astroclash
 
                 return inputs;
             }
-
             public void setDebugValues(List<float> _currentStats)
             {
                 for (int i = 0; i < modules.Count; i++)
@@ -93,6 +89,7 @@ namespace Astroclash
         private List<string> stateNames = new List<string>();
         private List<bool> states = new List<bool>();
         private List<GameObject> stateUIObjects = new List<GameObject>();
+        private List<GameObject> statUIObjects = new List<GameObject>();
 
         private static Dictionary<string, float> weaponIncrements = new Dictionary<string, float>();
         private Dictionary<string, float> weaponStats = new Dictionary<string, float>();
@@ -103,7 +100,7 @@ namespace Astroclash
 
         private GameObject bullet = null;
         private GameObject upgradeUI = null;
-        private GameObject upgradeUIButton = null;
+        private GameObject canvas = null;
 
         private string stateSet = null;
 
@@ -114,18 +111,6 @@ namespace Astroclash
             weaponStatsNames = _statsName;
             stateNames = _stateNames;
             states = _states;
-
-            debugUI = new WeaponDebugUI(_stats, _statsName);
-
-            for (int i = 0; i < stats.Count; i++)
-            {
-                weaponStats.Add(weaponStatsNames[i], stats[i]);
-            }
-
-            for (int i = 0; i < states.Count; i++)
-            {
-                weaponStates.Add(stateNames[i], states[i]);
-            }
 
             for (int i = 0; i < stats.Count; i++)
             {
@@ -159,12 +144,6 @@ namespace Astroclash
             }
             debugUI.setDebugValues(currStats);
             checkStates();
-        }
-
-        //creates networked projectile from defined prefab TODO
-        public GameObject createBullet()
-        {
-            return null;
         }
 
         //state requirement functions
@@ -235,9 +214,10 @@ namespace Astroclash
         }
     
         //function to toggle weapons debug mode
-        public void debugger()
+        public void step()
         {
-            if (Input.GetKeyDown(KeyCode.BackQuote)){
+            if (Input.GetKeyDown(KeyCode.BackQuote))
+            {
                 debugUI.toggle();
             }
 
@@ -245,6 +225,8 @@ namespace Astroclash
             {
                 setStatsDebug();
             }
+
+            checkStates();
         }
         public void setStatsDebug()
         {
@@ -253,7 +235,6 @@ namespace Astroclash
             {
                 setStat(weaponStatsNames[i], input[i]);
             }
-            checkStates();
         }
         public bool isDebug()
         {
@@ -261,25 +242,13 @@ namespace Astroclash
         }
         
         // UI functions
-        public void UIToggleOff()
-        {
-            upgradeUI.SetActive(false);
-        }
-        public void UIToggleOn()
-        {   
-            upgradeUI.SetActive(true);
-        }
-        public void registerStateUI(List<GameObject> _ui)
-        {
-            stateUIObjects = _ui;
-        }
         public void registerUpdgradeUI(GameObject _ui)
         {
             upgradeUI = _ui;
         }
-        public void registerUpgradeUIButton(GameObject _ui)
+        public void registerCanvas(GameObject _canvas)
         {
-            upgradeUIButton = _ui;
+            canvas = _canvas;
         }
         public void enableButton(GameObject _button)
         {
@@ -306,10 +275,10 @@ namespace Astroclash
             _button.GetComponent<Button>().enabled = false;
         }
         
-
         // Getter & Setters
         public void setState(string _stateName)
         {
+            Debug.Log("Setting state: " + _stateName);
             weaponStates[_stateName] = true;
             stateSet = _stateName;
         }
@@ -340,6 +309,44 @@ namespace Astroclash
         public StateRequirement getStateRequirement(string _stateName)
         {
             return stateRequirements[_stateName];
+        }
+
+        //debug functions
+        public void instantiateUI()
+        {
+            debugUI = new WeaponDebugUI(stats, weaponStatsNames, canvas);
+
+            for (int i = 0; i < stats.Count; i++)
+            {
+                weaponStats.Add(weaponStatsNames[i], stats[i]);
+                if (upgradeUI.transform.Find(weaponStatsNames[i]) == null)
+                {
+                    Debug.Log("Weapon stat " + weaponStatsNames[i] + " does not have a UI element.");
+                }
+                else 
+                {
+                    GameObject statUIElement = upgradeUI.transform.Find(weaponStatsNames[i]).gameObject;
+                    statUIElement.AddComponent<Button>();
+                    string name = weaponStatsNames[i];
+                    statUIElement.GetComponent<Button>().onClick.AddListener(() => increaseStat(name));
+                    statUIObjects.Add(statUIElement);
+                }
+                
+            }
+
+            for (int i = 0; i < states.Count; i++)
+            {
+                weaponStates.Add(stateNames[i], states[i]);
+                GameObject stateUIElement = upgradeUI.transform.Find(stateNames[i]).gameObject;
+
+                if (stateUIElement == null)
+                    Debug.Log("Canvas object not found!");
+
+                stateUIElement.AddComponent<Button>();
+                string state = stateNames[i];
+                stateUIElement.GetComponent<Button>().onClick.AddListener(() => setState(state));
+                stateUIObjects.Add(stateUIElement);
+            }
         }
     }
 }

@@ -1,8 +1,9 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Unity.Netcode;
 
-public class bulletProjectiles : MonoBehaviour
+public class bulletProjectiles : NetworkBehaviour
 {
     private float range = 0.0f;
     private float damage = 0.0f;

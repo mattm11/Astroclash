@@ -1,8 +1,10 @@
 using UnityEngine;
+using UnityEngine.UI;
+using Unity.Netcode;
 using System.Collections.Generic;
 using Astroclash;
 
-public class bulletWeapon : MonoBehaviour
+public class bulletWeapon : NetworkBehaviour
 {
     // Weapon Registrars 
     private List<float> weaponStats = new List<float>()
@@ -48,7 +50,10 @@ public class bulletWeapon : MonoBehaviour
         "Machine Gun"
     };
 
+    //UI element list for states
     public List<GameObject> stateUIObjects = new List<GameObject>();
+    private GameObject upgradeUI = null;
+    private GameObject canvas = null;
     
     // State requirements
     StateRequirement sniperReq = new StateRequirement(
@@ -69,64 +74,69 @@ public class bulletWeapon : MonoBehaviour
         new List<float>() {5.0f, 3.0f}
     );
     
-
     // Default Weapon Bullet
     public GameObject defaultBulletPref;
-    // Weapon upgrade UI object
-    public GameObject weaponUI;
-    public GameObject weaponUIButton;
     
     // Weapon Controller
-    private WeaponController controller;
-
-    
+    private WeaponController controller = null;
     
     // Weapon Specific Variables
     private bool burst = false;
     private float sumDeltaTime = 0.0f;
     private float burstCount = 0.0f;
-    
+
     void Start()
     {
-        //setup weapon controller
-        controller = new WeaponController(
-            weaponStats,
-            weaponStatsIncrement,
-            statNames,
-            states,
-            stateNames
-        );
+        if (IsOwner)
+        {     
+            GameObject.Destroy(gameObject.GetComponent<NetworkObject>());
 
-        //setting default bullet prefab
-        controller.setBulletPrefab(defaultBulletPref);
+            //setup weapon controller
+            controller = new WeaponController(
+                weaponStats,
+                weaponStatsIncrement,
+                statNames,
+                states,
+                stateNames
+            );
 
-        //set state requirements
-        controller.registerStateRequirement("Sniper", sniperReq);
-        controller.registerStateRequirement("Shotgun", shotgunReq);
-        controller.registerStateRequirement("Machine Gun", machineGunReq);
+            //setting default bullet prefab
+            controller.setBulletPrefab(defaultBulletPref);
 
-        controller.registerStateUI(stateUIObjects);
-        controller.registerUpdgradeUI(weaponUI);
-        controller.registerUpgradeUIButton(weaponUIButton);
+            //set state requirements (state requirements need to have UI elements but don't need to be registered)
+            controller.registerStateRequirement("Sniper", sniperReq);
+            controller.registerStateRequirement("Shotgun", shotgunReq);
+            controller.registerStateRequirement("Machine Gun", machineGunReq);
+
+            //register UI elements and objects
+            controller.registerCanvas(canvas);
+            controller.registerUpdgradeUI(upgradeUI);
+
+            controller.instantiateUI();
+        }
+        
     }
-    
+
     // Gun Specific Code
     void Update()
     {
-        burstStep(); //controls burst logic
-        controller.debugger(); //calls controller debugger to step each frame
-
-        if (Input.GetMouseButton(0))
-            shoot();
-
-        //debug tools block
-        if (controller.isDebug())
+        if (IsOwner && IsServer == false)
         {
-            Vector3 mousePosition = new Vector3(Input.mousePosition.x, Input.mousePosition.y, Camera.main.nearClipPlane);
-            Vector3 mouseRealtivePosition = Camera.main.ScreenToWorldPoint(mousePosition);
-            if (controller.getState("Machine Gun") != true && controller.getState("Shotgun") != true)
-                Debug.DrawLine(transform.position, mouseRealtivePosition, Color.red);
-            drawAngle(controller.getStat("Shot Spread"));
+            burstStep(); //controls burst logic
+            controller.step(); //calls controller debugger to step each frame as well as state management
+
+            if (Input.GetKey(KeyCode.Space))
+                shoot();
+
+            //debug tools block
+            if (controller.isDebug())
+            {
+                Vector3 mousePosition = new Vector3(Input.mousePosition.x, Input.mousePosition.y, Camera.main.nearClipPlane);
+                Vector3 mouseRealtivePosition = Camera.main.ScreenToWorldPoint(mousePosition);
+                if (controller.getState("Machine Gun") != true && controller.getState("Shotgun") != true)
+                    Debug.DrawLine(transform.position, mouseRealtivePosition, Color.red);
+                drawAngle(controller.getStat("Shot Spread"));
+            }
         }
     }    
     // shooting logic
@@ -150,19 +160,29 @@ public class bulletWeapon : MonoBehaviour
                         Vector3 posPoint = rotateVector(transform.right, rotationAngle * (i));
                         Vector3 negPoint = rotateVector(transform.right, -rotationAngle * (i));
 
-                        //TODO: This needs to be replaced with networked objects
-                        GameObject bullet1 = Instantiate(defaultBulletPref, transform.position, transform.rotation);
-                        GameObject bullet2 = Instantiate(defaultBulletPref, transform.position, transform.rotation);
-                        GameObject bullet3 = Instantiate(defaultBulletPref, transform.position, transform.rotation);
+                        fireBulletServerRpc(
+                            posPoint, 
+                            gameObject.transform.position, 
+                            controller.getStat("Projectile Speed"),
+                            controller.getStat("Projectile Range"),
+                            controller.getStat("Projectile Damage")
+                        );
 
-                        bullet1.GetComponent<Rigidbody2D>().AddForce(posPoint * controller.getStat("Projectile Speed"), ForceMode2D.Impulse);
-                        bullet1.GetComponent<bulletProjectiles>().setStats(controller.getStat("Projectile Range"), controller.getStat("Projectile Damage"));
+                        fireBulletServerRpc(
+                            negPoint, 
+                            gameObject.transform.position, 
+                            controller.getStat("Projectile Speed"),
+                            controller.getStat("Projectile Range"),
+                            controller.getStat("Projectile Damage")
+                        );
 
-                        bullet2.GetComponent<Rigidbody2D>().AddForce(negPoint * controller.getStat("Projectile Speed"), ForceMode2D.Impulse);
-                        bullet2.GetComponent<bulletProjectiles>().setStats(controller.getStat("Projectile Range"), controller.getStat("Projectile Damage"));
-
-                        bullet3.GetComponent<Rigidbody2D>().AddForce(transform.right * controller.getStat("Projectile Speed"), ForceMode2D.Impulse);
-                        bullet3.GetComponent<bulletProjectiles>().setStats(controller.getStat("Projectile Range"), controller.getStat("Projectile Damage"));
+                        fireBulletServerRpc(
+                            transform.right, 
+                            gameObject.transform.position, 
+                            controller.getStat("Projectile Speed"),
+                            controller.getStat("Projectile Range"),
+                            controller.getStat("Projectile Damage")
+                        );
                     }
                 }
                 //even streams
@@ -177,10 +197,14 @@ public class bulletWeapon : MonoBehaviour
                         for (int i = 1; i < temp; i++)
                         {
                             Vector3 negPoint = rotateVector(point1, -rotationAngle * (i));
-                            //TODO: This needs to be replaced with networked objects
-                            GameObject bullet = Instantiate(defaultBulletPref, transform.position, transform.rotation);
-                            bullet.GetComponent<Rigidbody2D>().AddForce(negPoint * controller.getStat("Projectile Speed"), ForceMode2D.Impulse);
-                            bullet.GetComponent<bulletProjectiles>().setStats(controller.getStat("Projectile Range"), controller.getStat("Projectile Damage"));
+
+                            fireBulletServerRpc(
+                                negPoint, 
+                                gameObject.transform.position, 
+                                controller.getStat("Projectile Speed"),
+                                controller.getStat("Projectile Range"),
+                                controller.getStat("Projectile Damage")
+                            );
                         }
                     }
                     else
@@ -189,25 +213,34 @@ public class bulletWeapon : MonoBehaviour
                         Vector3 posPoint = rotateVector(transform.right, rotationAngle);
                         Vector3 negPoint = rotateVector(transform.right, -rotationAngle);
 
-                        //TODO: This needs to be replaced with networked objects
-                        GameObject bullet1 = Instantiate(defaultBulletPref, transform.position, transform.rotation);
-                        GameObject bullet2 = Instantiate(defaultBulletPref, transform.position, transform.rotation);
+                        fireBulletServerRpc(
+                            posPoint, 
+                            gameObject.transform.position, 
+                            controller.getStat("Projectile Speed"),
+                            controller.getStat("Projectile Range"),
+                            controller.getStat("Projectile Damage")
+                        );
 
-                        bullet1.GetComponent<Rigidbody2D>().AddForce(posPoint * controller.getStat("Projectile Speed"), ForceMode2D.Impulse);
-                        bullet1.GetComponent<bulletProjectiles>().setStats(controller.getStat("Projectile Range"), controller.getStat("Projectile Damage"));
-
-                        bullet2.GetComponent<Rigidbody2D>().AddForce(negPoint * controller.getStat("Projectile Speed"), ForceMode2D.Impulse);
-                        bullet2.GetComponent<bulletProjectiles>().setStats(controller.getStat("Projectile Range"), controller.getStat("Projectile Damage"));
+                        fireBulletServerRpc(
+                            negPoint, 
+                            gameObject.transform.position, 
+                            controller.getStat("Projectile Speed"),
+                            controller.getStat("Projectile Range"),
+                            controller.getStat("Projectile Damage")
+                        );
                     }
                     
                 }
                 //single stream
                 else
                 {
-                    //TODO: This needs to be replaced with networked objects
-                    GameObject bullet = Instantiate(defaultBulletPref, transform.position, transform.rotation);
-                    bullet.GetComponent<Rigidbody2D>().AddForce(transform.right * controller.getStat("Projectile Speed"), ForceMode2D.Impulse);
-                    bullet.GetComponent<bulletProjectiles>().setStats(controller.getStat("Projectile Range"), controller.getStat("Projectile Damage"));
+                    fireBulletServerRpc(
+                            transform.right, 
+                            gameObject.transform.position, 
+                            controller.getStat("Projectile Speed"),
+                            controller.getStat("Projectile Range"),
+                            controller.getStat("Projectile Damage")
+                    );
                 }
             }
             //sniper path logic
@@ -224,10 +257,13 @@ public class bulletWeapon : MonoBehaviour
                     float randomAngle = Random.Range(-controller.getStat("Shot Spread")/2, controller.getStat("Shot Spread")/2);
                     Vector3 fireVector = rotateVector(transform.right, randomAngle);
 
-                    //TODO: This needs to be replaced with networked objects
-                    GameObject bullet = Instantiate(defaultBulletPref, transform.position, transform.rotation);
-                    bullet.GetComponent<Rigidbody2D>().AddForce(fireVector * controller.getStat("Projectile Speed"), ForceMode2D.Impulse);
-                    bullet.GetComponent<bulletProjectiles>().setStats(controller.getStat("Projectile Range"), controller.getStat("Projectile Damage"));
+                    fireBulletServerRpc(
+                            fireVector, 
+                            gameObject.transform.position, 
+                            controller.getStat("Projectile Speed"),
+                            controller.getStat("Projectile Range"),
+                            controller.getStat("Projectile Damage")
+                    );
                 }
                 for (int i = 0; i < controller.getStat("Projectile Count")/2; i++)
                 {
@@ -235,10 +271,13 @@ public class bulletWeapon : MonoBehaviour
                     float randomAngle = Random.Range(-controller.getStat("Shot Spread")/2, controller.getStat("Shot Spread")/2);
                     Vector3 fireVector = rotateVector(transform.right, randomAngle);
 
-                    //TODO: This needs to be replaced with networked objects
-                    GameObject bullet = Instantiate(defaultBulletPref, transform.position, transform.rotation);
-                    bullet.GetComponent<Rigidbody2D>().AddForce(fireVector * controller.getStat("Projectile Speed") * 0.8f, ForceMode2D.Impulse);
-                    bullet.GetComponent<bulletProjectiles>().setStats(controller.getStat("Projectile Range"), controller.getStat("Projectile Damage"));
+                    fireBulletServerRpc(
+                            fireVector, 
+                            gameObject.transform.position, 
+                            controller.getStat("Projectile Speed") * 0.80f,
+                            controller.getStat("Projectile Range"),
+                            controller.getStat("Projectile Damage")
+                    );
                 }
                 for (int i = 0; i < controller.getStat("Projectile Count")/4; i++)
                 {
@@ -246,10 +285,13 @@ public class bulletWeapon : MonoBehaviour
                     float randomAngle = Random.Range(-controller.getStat("Shot Spread")/2, controller.getStat("Shot Spread")/2);
                     Vector3 fireVector = rotateVector(transform.right, randomAngle);
 
-                    //TODO: This needs to be replaced with networked objects
-                    GameObject bullet = Instantiate(defaultBulletPref, transform.position, transform.rotation);
-                    bullet.GetComponent<Rigidbody2D>().AddForce(fireVector * controller.getStat("Projectile Speed") * 0.6f, ForceMode2D.Impulse);
-                    bullet.GetComponent<bulletProjectiles>().setStats(controller.getStat("Projectile Range"), controller.getStat("Projectile Damage"));
+                    fireBulletServerRpc(
+                            fireVector, 
+                            gameObject.transform.position, 
+                            controller.getStat("Projectile Speed") * 0.60f,
+                            controller.getStat("Projectile Range"),
+                            controller.getStat("Projectile Damage")
+                    );
                 }
             }
             //basic gun logic
@@ -261,10 +303,14 @@ public class bulletWeapon : MonoBehaviour
                     float randomAngle = Random.Range(-controller.getStat("Shot Spread")/2, controller.getStat("Shot Spread")/2);
                     Vector3 fireVector = rotateVector(transform.right, randomAngle);
 
-                    //TODO: This needs to be replaced with networked objects
-                    GameObject bullet = Instantiate(defaultBulletPref, transform.position, transform.rotation);
-                    bullet.GetComponent<Rigidbody2D>().AddForce(fireVector * controller.getStat("Projectile Speed"), ForceMode2D.Impulse);
-                    bullet.GetComponent<bulletProjectiles>().setStats(controller.getStat("Projectile Range"), controller.getStat("Projectile Damage"));
+                    Debug.Log("Firing Weapon");
+                    fireBulletServerRpc(
+                        fireVector, 
+                        gameObject.transform.position, 
+                        controller.getStat("Projectile Speed"),
+                        controller.getStat("Projectile Range"),
+                        controller.getStat("Projectile Damage")
+                    );
                 }
             }
 
@@ -272,6 +318,22 @@ public class bulletWeapon : MonoBehaviour
             sumDeltaTime = 0;
         }
     }   
+
+    [ServerRpc]
+    void fireBulletServerRpc(Vector3 _direction, Vector3 _position, float _projectileSpeed, float _projectileRange, float _projectileDamage)
+    {
+        Debug.Log("Received fire bullet RPC");
+        createBulletClientRpc(_direction, _position, _projectileSpeed, _projectileRange, _projectileDamage);
+    }
+
+    [ClientRpc]
+    void createBulletClientRpc(Vector3 _direction, Vector3 _position, float _projectileSpeed, float _projectileRange, float _projectileDamage)
+    {
+        GameObject bullet = Instantiate(defaultBulletPref, _position, Quaternion.identity);
+        bullet.GetComponent<Rigidbody2D>().AddForce(_direction * _projectileSpeed, ForceMode2D.Impulse);
+        bullet.GetComponent<bulletProjectiles>().setStats(_projectileRange, _projectileDamage);
+    }
+
     // draws debug lines
     void drawAngle(float _angle)
     {
@@ -345,12 +407,14 @@ public class bulletWeapon : MonoBehaviour
         {
             if (sumDeltaTime >= controller.getStat("Burst Timing") && burstCount < controller.getStat("Projectile Count"))
             {
-                Debug.Log("Firing burst");
-                //create bullet and send it
-                //TODO: This needs to be replaced with networked objects
-                GameObject bullet = Instantiate(defaultBulletPref, transform.position, transform.rotation);
-                bullet.GetComponent<Rigidbody2D>().AddForce(transform.right * controller.getStat("Projectile Speed"), ForceMode2D.Impulse);
-                bullet.GetComponent<bulletProjectiles>().setStats(controller.getStat("Projectile Range"), controller.getStat("Projectile Damage"));
+                fireBulletServerRpc(
+                            transform.right, 
+                            gameObject.transform.position, 
+                            controller.getStat("Projectile Speed"),
+                            controller.getStat("Projectile Range"),
+                            controller.getStat("Projectile Damage")
+                );
+
                 //reset sum delta
                 sumDeltaTime = 0.0f;
                 //increment burst count
@@ -358,7 +422,6 @@ public class bulletWeapon : MonoBehaviour
             }
             else if (burstCount >= controller.getStat("Projectile Count"))
             {
-                Debug.Log("burst ended");
                 //set burst count to zero
                 burstCount = 0.0f;
                 //set burst to false
@@ -390,12 +453,18 @@ public class bulletWeapon : MonoBehaviour
     {
         controller.setState(_stateName);
     }
-    public void toggleOff()
+
+    // helper functions
+    public WeaponController getController()
     {
-        controller.UIToggleOff();
+        return controller;
     }
-    public void toggleOn()
+    public void setUpgradeUI(GameObject _ui)
+    {  
+        upgradeUI = _ui;
+    }
+    public void setCanvas(GameObject _canvas)
     {
-        controller.UIToggleOn();
+        canvas = _canvas;
     }
 }
