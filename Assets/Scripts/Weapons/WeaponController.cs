@@ -93,14 +93,18 @@ namespace Astroclash
 
         private static Dictionary<string, float> weaponIncrements = new Dictionary<string, float>();
         private Dictionary<string, float> weaponStats = new Dictionary<string, float>();
+        private Dictionary<string, float> weaponStatCosts = new Dictionary<string, float>();
+        private Dictionary<string, float> weaponStateCosts = new Dictionary<string, float>();
         private Dictionary<string, bool> weaponStates = new Dictionary<string, bool>();
         private Dictionary<string, StateRequirement> stateRequirements = new Dictionary<string, StateRequirement>();
+        
 
         private WeaponDebugUI debugUI = null;
 
         private GameObject bullet = null;
         private GameObject upgradeUI = null;
         private GameObject canvas = null;
+        private GameObject player = null;
 
         private string stateSet = null;
 
@@ -118,19 +122,48 @@ namespace Astroclash
             }
         }
 
+        public void registerPlayer(GameObject _player)
+        {
+            player = _player;
+        }
+        
         //stat manipulation
+        public void registerStatCosts(List<float> _costs)
+        {
+            for(int i = 0; i < weaponStatsNames.Count; i++)
+            {
+                weaponStatCosts.Add(weaponStatsNames[i], _costs[i]);
+            }
+        }
         public void increaseStat(string _statName)
         {
-            weaponStats[_statName] += weaponIncrements[_statName];
-
-            //update debug block
-            List<float> currStats = new List<float>();
-            for (int i = 0; i < weaponStatsNames.Count; i++)
+            if (player == null)
             {
-                currStats.Add(weaponStats[weaponStatsNames[i]]);
+                Debug.Log("Player not found!");
             }
-            debugUI.setDebugValues(currStats);
-            checkStates();
+            else 
+            {
+                Debug.Log("Object Name: " + player.name);
+            }
+
+            if (player.GetComponent<playerController>().getCurrency() >= weaponStatCosts[_statName])
+            {
+                weaponStats[_statName] += weaponIncrements[_statName];
+                player.GetComponent<playerController>().subtractCurrency(weaponStatCosts[_statName]);
+
+                 //update debug block
+                List<float> currStats = new List<float>();
+                for (int i = 0; i < weaponStatsNames.Count; i++)
+                {
+                    currStats.Add(weaponStats[weaponStatsNames[i]]);
+                }
+                debugUI.setDebugValues(currStats);
+                checkStates();
+            }
+            else 
+            {
+                Debug.Log("Not enough money!");
+            }
         }
         public void decreaseState(string _statName)
         {
@@ -147,6 +180,13 @@ namespace Astroclash
         }
 
         //state requirement functions
+        public void registerStateCosts(List<float> _costs)
+        {
+            for(int i = 0; i < stateNames.Count; i++)
+            {
+                weaponStateCosts.Add(stateNames[i], _costs[i]);
+            }
+        }
         public bool checkStateRequirementLessThan(string _stateName)
         {
             StateRequirement temp = stateRequirements[_stateName];
@@ -278,9 +318,15 @@ namespace Astroclash
         // Getter & Setters
         public void setState(string _stateName)
         {
-            Debug.Log("Setting state: " + _stateName);
-            weaponStates[_stateName] = true;
-            stateSet = _stateName;
+            if (player.GetComponent<playerController>().getCurrency() >= weaponStateCosts[_stateName])
+            {
+                Debug.Log("Setting state: " + _stateName);
+                weaponStates[_stateName] = true;
+                stateSet = _stateName;
+                player.GetComponent<playerController>().subtractCurrency(weaponStateCosts[_stateName]);
+                checkStates();
+            }
+            
         }
         public void setStat(string _statName, float _value)
         {
@@ -345,6 +391,7 @@ namespace Astroclash
                 stateUIElement.AddComponent<Button>();
                 string state = stateNames[i];
                 stateUIElement.GetComponent<Button>().onClick.AddListener(() => setState(state));
+                stateUIElement.GetComponent<Button>().enabled = false;
                 stateUIObjects.Add(stateUIElement);
             }
         }

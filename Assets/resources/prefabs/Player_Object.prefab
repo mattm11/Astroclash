@@ -63,7 +63,7 @@ GameObject:
   - component: {fileID: 4156279827784186044}
   m_Layer: 0
   m_Name: Player
-  m_TagString: Untagged
+  m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -176,6 +176,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6bc20b440a0bf0b46bd373e8471fc992, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  money: 0
   UILogic: {fileID: 0}
 --- !u!114 &418930252468561938
 MonoBehaviour:
@@ -484,22 +485,22 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5657362199489006743, guid: 07422cbb22d6b4a4b8d4287e2a547741, type: 3}
       propertyPath: UIElements.Array.size
-      value: 3
+      value: 4
       objectReference: {fileID: 0}
     - target: {fileID: 5657362199489006743, guid: 07422cbb22d6b4a4b8d4287e2a547741, type: 3}
       propertyPath: UIElements.Array.data[3]
       value: 
-      objectReference: {fileID: 8524579168757994960}
+      objectReference: {fileID: 1493873702123477629}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 07422cbb22d6b4a4b8d4287e2a547741, type: 3}
+--- !u!1 &1493873702123477629 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 723346513419441421, guid: 07422cbb22d6b4a4b8d4287e2a547741, type: 3}
+  m_PrefabInstance: {fileID: 2211999579438321520}
+  m_PrefabAsset: {fileID: 0}
 --- !u!224 &5778229474615441812 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 5657362198622189284, guid: 07422cbb22d6b4a4b8d4287e2a547741, type: 3}
-  m_PrefabInstance: {fileID: 2211999579438321520}
-  m_PrefabAsset: {fileID: 0}
---- !u!1 &8524579168757994960 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 7566041272616475296, guid: 07422cbb22d6b4a4b8d4287e2a547741, type: 3}
   m_PrefabInstance: {fileID: 2211999579438321520}
   m_PrefabAsset: {fileID: 0}
 --- !u!1001 &2435163337762278340

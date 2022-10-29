@@ -27,6 +27,16 @@ public class bulletWeapon : NetworkBehaviour
         1.0f,
         0.05f
     };
+    private List<float> weaponStatCosts = new List<float>()
+    {
+        100.0f,
+        100.0f,
+        100.0f,
+        100.0f,
+        100.0f,
+        100.0f,
+        100.0f
+    };
     private List<string> statNames = new List<string>()
     {
         "Fire Rate",
@@ -42,6 +52,12 @@ public class bulletWeapon : NetworkBehaviour
         false,
         false,
         false
+    };
+    private List<float> stateCosts = new List<float>()
+    {
+        1000.0f,
+        1000.0f,
+        1000.0f
     };
     private List<string> stateNames = new List<string>()
     {
@@ -111,6 +127,10 @@ public class bulletWeapon : NetworkBehaviour
             //register UI elements and objects
             controller.registerCanvas(canvas);
             controller.registerUpdgradeUI(upgradeUI);
+
+            controller.registerPlayer(gameObject.transform.parent.gameObject);
+            controller.registerStatCosts(weaponStatCosts);
+            controller.registerStateCosts(stateCosts);
 
             controller.instantiateUI();
         }
