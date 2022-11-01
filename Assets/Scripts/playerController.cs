@@ -15,6 +15,12 @@ public class playerController : NetworkBehaviour
     private float velocity = 0.0f;
     private Vector3 rotationDieOff = new Vector3(0.0f, 0.0f, 0.0f);
 
+    // player health for UI
+    public int maxHealth = 100;
+    public NetworkVariable<int> currentHealth = new NetworkVariable<int>();
+    public GameObject healthBar;
+    public HealthBar playerHealth;
+
     public GameObject UILogic;
     private GameObject canvas;
     private GameObject eventSystem;
@@ -38,6 +44,12 @@ public class playerController : NetworkBehaviour
 
             spaceStationUI = canvas.transform.Find("Space Station UI").gameObject;
             spaceStationButton = canvas.transform.Find("Space UI Button").gameObject;
+
+            //Find health bar, initiate base health
+            healthBar = GameObject.Find("Health bar");
+            playerHealth = healthBar.GetComponent<HealthBar>();
+            currentHealth.Value = maxHealth;
+            playerHealth.SetMaxHealth(maxHealth);
 
             //Find weapon objects
             bulletweaponObject = gameObject.transform.Find("BulletWeapon").gameObject;
@@ -65,19 +77,19 @@ public class playerController : NetworkBehaviour
             GameObject.Destroy(gameObject.transform.Find("Canvas").gameObject);
             GameObject.Destroy(gameObject.transform.Find("EventSystem").gameObject);
         }
-        
+
     }
-    
+
     // Update is called once per frame
     void Update()
     {
-        if (IsOwner) 
+        if (IsOwner)
         {
             //update the camera origin
             Vector3 newPosition = playerCamera.transform.position;
             newPosition.x = gameObject.transform.position.x;
             newPosition.y = gameObject.transform.position.y;
-            playerCamera.transform.position= newPosition;
+            playerCamera.transform.position = newPosition;
 
             //Movement is broken down into: X = Movement_Speed * cos(rotation_angle) Y = Movement_Speed * sin(rotation_angle)
             float angle = (float)(transform.eulerAngles.z * (Math.PI / 180));
@@ -88,7 +100,7 @@ public class playerController : NetworkBehaviour
             if (Input.GetKey(KeyCode.W))
             {
                 //adding player speed, until max speed is reached
-                if(velocity + acceleration <= maxVelocity)
+                if (velocity + acceleration <= maxVelocity)
                 {
                     velocity += acceleration * Time.deltaTime;
                 }
@@ -96,7 +108,7 @@ public class playerController : NetworkBehaviour
                 {
                     velocity += 0.25f * Time.deltaTime;
                 }
-                else 
+                else
                 {
                     velocity = maxVelocity;
                 }
@@ -104,7 +116,7 @@ public class playerController : NetworkBehaviour
             //Slow down
             else if (Input.GetKey(KeyCode.S))
             {
-                if((velocity - acceleration) > 0)
+                if ((velocity - acceleration) > 0)
                 {
                     velocity -= (acceleration) * Time.deltaTime;
                 }
@@ -112,11 +124,17 @@ public class playerController : NetworkBehaviour
                 {
                     velocity -= 0.25f * Time.deltaTime;
                 }
-                else 
+                else
                 {
                     velocity = 0.0f;
                 }
             }
+
+            if (Input.GetKeyDown(KeyCode.Space))
+            {
+                TakeDamage(20);
+            }
+            playerHealth.SetHealth(currentHealth.Value);
         }
     }
 
@@ -127,7 +145,7 @@ public class playerController : NetworkBehaviour
             if (collider.gameObject.name == "Space Station")
                 UILogic.GetComponent<UIRegistrar>().enableIndex(0);
         }
-       
+
     }
 
     private void OnTriggerExit2D(Collider2D collider)
@@ -135,8 +153,15 @@ public class playerController : NetworkBehaviour
         if (IsOwner)
         {
             if (collider.gameObject.name == "Space Station")
-            UILogic.GetComponent<UIRegistrar>().disableAll();
+                UILogic.GetComponent<UIRegistrar>().disableAll();
         }
-        
+
+    }
+
+    private void TakeDamage(int damage)
+    {
+        currentHealth.Value -= damage;
+
+        playerHealth.SetHealth(currentHealth.Value);
     }
 }
