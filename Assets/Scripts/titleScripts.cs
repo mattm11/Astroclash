@@ -12,6 +12,6 @@ public class titleScripts : MonoBehaviour
     public void start()
     {
         Debug.Log("Starting the game...");
-        SceneManager.LoadScene("Network Scene");
+        SceneManager.LoadScene("Network Scene Final");
     }
 }

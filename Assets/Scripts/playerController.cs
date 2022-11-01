@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Unity.Netcode;
 using System;
+using UnityEngine.SceneManagement;
 using TMPro;
 
 public class playerController : NetworkBehaviour
@@ -20,6 +21,9 @@ public class playerController : NetworkBehaviour
     public NetworkVariable<int> currentHealth = new NetworkVariable<int>();
     public GameObject healthBar;
     public HealthBar playerHealth;
+
+    // player currency for round
+    public NetworkVariable<int> credits = new NetworkVariable<int>();
 
     public GameObject UILogic;
     private GameObject canvas;
@@ -50,6 +54,9 @@ public class playerController : NetworkBehaviour
             playerHealth = healthBar.GetComponent<HealthBar>();
             currentHealth.Value = maxHealth;
             playerHealth.SetMaxHealth(maxHealth);
+
+            //Set initial credits for round
+            credits.Value = 0;
 
             //Find weapon objects
             bulletweaponObject = gameObject.transform.Find("BulletWeapon").gameObject;
@@ -163,5 +170,15 @@ public class playerController : NetworkBehaviour
         currentHealth.Value -= damage;
 
         playerHealth.SetHealth(currentHealth.Value);
+
+        if (currentHealth.Value <= 0)
+        {
+            SceneManager.LoadScene("DeathScreen");
+        }
+    }
+
+    private void PickupCredits(int amount)
+    {
+        credits.Value += amount;
     }
 }
