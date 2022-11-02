@@ -7,6 +7,9 @@ public class shipUpgrades : MonoBehaviour
     private GameObject player;
     private float hullUpgradeCost = 100.0f;
     private float speedUpgradeCost = 100.0f;
+    private float repairUpgradeCost = 100.0f;
+
+
     void Start()
     {
         GameObject[] players = GameObject.FindGameObjectsWithTag("Player");
@@ -39,17 +42,28 @@ public class shipUpgrades : MonoBehaviour
         
     }
 
-    public void upgradeSpeed()
+    public void upgradeSpeed(float _speedIncrement)
     {
         if (player.GetComponent<playerController>().getCurrency() >= speedUpgradeCost)
         {
-            float newMax = player.GetComponent<playerController>().getMaxVelocity() + 0.25f;
+            float newMax = player.GetComponent<playerController>().getMaxVelocity() + _speedIncrement;
             player.GetComponent<playerController>().setMaxVelocity(newMax);
 
-            newMax = player.GetComponent<playerController>().getAcceleration() + 0.0825f;
+            newMax = player.GetComponent<playerController>().getAcceleration() + (_speedIncrement * 0.33f);
             player.GetComponent<playerController>().setAcceleration(newMax);
 
             player.GetComponent<playerController>().subtractCurrency(speedUpgradeCost);
+        }
+    }
+
+    public void upgradeRepair(float _repairIncrement)
+    {
+        if (player.GetComponent<playerController>().getCurrency() >= repairUpgradeCost)
+        {
+            float newRepair = player.GetComponent<playerController>().getRepair() + _repairIncrement;
+            player.GetComponent<playerController>().setRepair(newRepair);
+
+            player.GetComponent<playerController>().subtractCurrency(repairUpgradeCost);
         }
     }
 }

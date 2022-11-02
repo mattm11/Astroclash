@@ -61,7 +61,7 @@ GameObject:
   - component: {fileID: 418930252468561938}
   - component: {fileID: 8532052230261960984}
   - component: {fileID: 4156279827784186044}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Player
   m_TagString: Player
   m_Icon: {fileID: 0}
@@ -176,8 +176,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6bc20b440a0bf0b46bd373e8471fc992, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  acceleration: 1
+  maxVelocity: 3
+  velocity: 0
   money: 0
+  health: 100
+  repairAmount: 1
   UILogic: {fileID: 0}
+  weaponRegistry:
+  - {fileID: 6378874379617464154}
 --- !u!114 &418930252468561938
 MonoBehaviour:
   m_ObjectHideFlags: 0

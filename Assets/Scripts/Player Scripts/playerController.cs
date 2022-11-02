@@ -16,8 +16,9 @@ public class playerController : NetworkBehaviour
     private Vector3 rotationDieOff = new Vector3(0.0f, 0.0f, 0.0f);
 
     public float money = 0.0f;
-    private float health = 100.0f;
+    public float health = 100.0f;
     private float maxHealth = 100.0f;
+    public float repairAmount = 1.0f; //hull repaired passively per second
 
     public GameObject UILogic;
     private GameObject canvas;
@@ -29,10 +30,14 @@ public class playerController : NetworkBehaviour
     private GameObject spaceStationButton;
     private GameObject currencyUI;
 
+    public List<GameObject> weaponRegistry = new List<GameObject>();
+
     private Camera playerCamera;
 
     void Start()
     {
+        Physics2D.IgnoreLayerCollision(6,7);
+
         if (IsOwner)
         {
             GameObject parent = gameObject.transform.parent.gameObject;
@@ -41,6 +46,9 @@ public class playerController : NetworkBehaviour
             //Find canvas/even system
             canvas = gameObject.transform.Find("Canvas").gameObject;
             eventSystem = gameObject.transform.Find("EventSystem").gameObject;
+
+            canvas.GetComponent<Canvas>().worldCamera = playerCamera;
+            canvas.GetComponent<Canvas>().planeDistance = 10;
 
             //General UI (Health, Currency, ETC.)
             currencyUI = canvas.transform.Find("Currency UI").gameObject;
@@ -132,6 +140,7 @@ public class playerController : NetworkBehaviour
             }
 
             currencyUI.GetComponent<TMP_Text>().text = money.ToString();
+            repair();
         }
     }
 
@@ -140,9 +149,25 @@ public class playerController : NetworkBehaviour
         if (IsOwner)
         {
             if (collider.gameObject.name == "Space Station")
+            {
                 UILogic.GetComponent<UIRegistrar>().enableIndex(0);
+                disableWeapons();
+            }
+                   
         }
-       
+        
+        // bullet weapon interaction logic
+        if (collider.gameObject.tag == "enemyBullet" && IsOwner)
+        {
+            GameObject.Destroy(collider.gameObject);
+            takeDamage(collider.gameObject.GetComponent<bulletProjectiles>().getDamage());
+        }
+
+        // logic to destroy the bullet that collided with other objects
+        if (collider.gameObject.tag == "friendlyBullet" && IsOwner == false)
+        {
+            GameObject.Destroy(collider.gameObject);
+        }
     }
 
     private void OnTriggerExit2D(Collider2D collider)
@@ -151,8 +176,48 @@ public class playerController : NetworkBehaviour
         {
             if (collider.gameObject.name == "Space Station")
             UILogic.GetComponent<UIRegistrar>().disableAll();
+            enableWeapons();
         }
         
+    }
+
+    private void takeDamage(float damage)
+    {
+        if (health - damage <= 0.0f)
+        {
+            health = 0.0f;
+            //Death logic
+        }
+        else
+        {
+            health -= damage;
+        }
+    }
+
+    private void repair()
+    {
+        if (health + (repairAmount * Time.deltaTime) <= maxHealth)
+        {
+            health += repairAmount * Time.deltaTime;
+        }
+        else if (health + (repairAmount * Time.deltaTime) > maxHealth)
+        {
+            health = maxHealth;
+        }
+    }
+    private void disableWeapons()
+    {
+        for (int i = 0; i < weaponRegistry.Count; i++)
+        {
+            weaponRegistry[i].SetActive(false);
+        }
+    }
+    private void enableWeapons()
+    {
+        for (int i = 0; i < weaponRegistry.Count; i++)
+        {
+            weaponRegistry[i].SetActive(true);
+        }
     }
 
     // Setters and Getters
@@ -199,5 +264,13 @@ public class playerController : NetworkBehaviour
     public void setAcceleration(float _acceleration)
     {
         acceleration = _acceleration;
+    }
+    public float getRepair()
+    {
+        return repairAmount;
+    }
+    public void setRepair(float _repairAmount)
+    {
+        repairAmount = _repairAmount;
     }
 }

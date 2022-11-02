@@ -339,10 +339,10 @@ public class bulletWeapon : NetworkBehaviour
         }
     }   
 
+    // Network Functions
     [ServerRpc]
     void fireBulletServerRpc(Vector3 _direction, Vector3 _position, float _projectileSpeed, float _projectileRange, float _projectileDamage)
     {
-        Debug.Log("Received fire bullet RPC");
         createBulletClientRpc(_direction, _position, _projectileSpeed, _projectileRange, _projectileDamage);
     }
 
@@ -352,6 +352,17 @@ public class bulletWeapon : NetworkBehaviour
         GameObject bullet = Instantiate(defaultBulletPref, _position, Quaternion.identity);
         bullet.GetComponent<Rigidbody2D>().AddForce(_direction * _projectileSpeed, ForceMode2D.Impulse);
         bullet.GetComponent<bulletProjectiles>().setStats(_projectileRange, _projectileDamage);
+
+        if (IsOwner && IsServer == false)
+        {
+            Debug.Log("Creating Friendly Bullet!");
+            bullet.tag = "friendlyBullet";
+        }
+        else
+        {
+            Debug.Log("Creating Enemy Bullet!");
+            bullet.tag = "enemyBullet";
+        }
     }
 
     // draws debug lines

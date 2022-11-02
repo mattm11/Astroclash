@@ -21,7 +21,15 @@ public class bulletProjectiles : NetworkBehaviour
         float distance = Mathf.Sqrt(Mathf.Pow((transform.position.x - startPosition.x), 2) + Mathf.Pow((transform.position.y - startPosition.y), 2));
         if (distance > range)
         {
-            GameObject.Destroy(this.gameObject);
+           GameObject.Destroy(gameObject);
+        }
+    }
+
+    private void OnTriggerEnter2D(Collider2D collider)
+    {
+        if (collider.gameObject.name == "Space Station")
+        {
+            GameObject.Destroy(gameObject);
         }
     }
 
@@ -29,5 +37,10 @@ public class bulletProjectiles : NetworkBehaviour
     {
         range = _range;
         damage = _damage;
+    }
+
+    public float getDamage()
+    {
+        return damage;
     }
 }
