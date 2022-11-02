@@ -176,6 +176,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6bc20b440a0bf0b46bd373e8471fc992, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  maxHealth: 100
+  currentHealth:
+    m_InternalValue: 0
+  healthBar: {fileID: 6372377801980368831, guid: 0872a9e41af47dd4d8befa7b46ba360a, type: 3}
+  credits:
+    m_InternalValue: 0
   UILogic: {fileID: 0}
 --- !u!114 &418930252468561938
 MonoBehaviour:
@@ -390,6 +396,18 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 8637928853064066863}
     m_Modifications:
+    - target: {fileID: 1913125375216287793, guid: 07422cbb22d6b4a4b8d4287e2a547741, type: 3}
+      propertyPath: m_AnchorMax.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1913125375216287793, guid: 07422cbb22d6b4a4b8d4287e2a547741, type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3748403976159566602, guid: 07422cbb22d6b4a4b8d4287e2a547741, type: 3}
+      propertyPath: m_RootOrder
+      value: 4
+      objectReference: {fileID: 0}
     - target: {fileID: 5657362198622189284, guid: 07422cbb22d6b4a4b8d4287e2a547741, type: 3}
       propertyPath: m_Pivot.x
       value: 0
