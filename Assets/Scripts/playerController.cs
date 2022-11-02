@@ -16,15 +16,6 @@ public class playerController : NetworkBehaviour
     private float velocity = 0.0f;
     private Vector3 rotationDieOff = new Vector3(0.0f, 0.0f, 0.0f);
 
-    // player health for UI
-    public int maxHealth = 100;
-    public NetworkVariable<int> currentHealth = new NetworkVariable<int>();
-    public GameObject healthBar;
-    public HealthBar playerHealth;
-
-    // player currency for round
-    public NetworkVariable<int> credits = new NetworkVariable<int>();
-
     public GameObject UILogic;
     private GameObject canvas;
     private GameObject eventSystem;
@@ -32,6 +23,13 @@ public class playerController : NetworkBehaviour
     private GameObject bulletUpgradeUI;
     private GameObject spaceStationUI;
     private GameObject spaceStationButton;
+    private GameObject healthBar;
+
+    // player health for UI
+    private const float maxHealth = 100;
+    private NetworkVariable<float> currentHealth = new NetworkVariable<float>(maxHealth);
+    // player currency for round
+    private NetworkVariable<float> credits = new NetworkVariable<float>();
 
     private Camera playerCamera;
 
@@ -42,18 +40,17 @@ public class playerController : NetworkBehaviour
             GameObject parent = gameObject.transform.parent.gameObject;
             playerCamera = parent.GetComponentInChildren<Camera>();
 
-            //Find canvas/even system
+            //Find canvas/event system
             canvas = gameObject.transform.Find("Canvas").gameObject;
             eventSystem = gameObject.transform.Find("EventSystem").gameObject;
 
             spaceStationUI = canvas.transform.Find("Space Station UI").gameObject;
             spaceStationButton = canvas.transform.Find("Space UI Button").gameObject;
 
-            //Find health bar, initiate base health
-            healthBar = GameObject.Find("Health bar");
-            playerHealth = healthBar.GetComponent<HealthBar>();
-            currentHealth.Value = maxHealth;
-            playerHealth.SetMaxHealth(maxHealth);
+            //Find health bar, give base health
+            //healthBar = GameObject.Find("Health bar");
+            healthBar = canvas.transform.Find("Health bar").gameObject;
+            healthBar.GetComponent<HealthBar>().SetMaxHealth(maxHealth);
 
             //Set initial credits for round
             credits.Value = 0;
@@ -141,7 +138,7 @@ public class playerController : NetworkBehaviour
             {
                 TakeDamage(20);
             }
-            playerHealth.SetHealth(currentHealth.Value);
+            healthBar.GetComponent<HealthBar>().SetHealth(currentHealth.Value);
         }
     }
 
@@ -169,7 +166,7 @@ public class playerController : NetworkBehaviour
     {
         currentHealth.Value -= damage;
 
-        playerHealth.SetHealth(currentHealth.Value);
+        healthBar.GetComponent<HealthBar>().SetHealth(currentHealth.Value);
 
         if (currentHealth.Value <= 0)
         {
