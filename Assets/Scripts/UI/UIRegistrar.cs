@@ -13,12 +13,10 @@ public class UIRegistrar : MonoBehaviour
             UIElements[i].SetActive(false);
         }
     }
-
     public void disableIndex(int _index)
     {
         UIElements[_index].SetActive(false);
     }
-
     public void enableAll()
     {
         for (int i = 0; i < UIElements.Count; i++)
@@ -26,9 +24,12 @@ public class UIRegistrar : MonoBehaviour
             UIElements[i].SetActive(true);
         }
     }
-
     public void enableIndex(int _index)
     {
         UIElements[_index].SetActive(true);
+    }
+    public int getElementCount()
+    {
+        return UIElements.Count;
     }
 }

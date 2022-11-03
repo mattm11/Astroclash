@@ -6,8 +6,8 @@ TagManager:
   tags:
   - BulletStates
   - UIModule
-  - UnassignedWeapon
-  - AssignedWeapon
+  - friendlyBullet
+  - enemyBullet
   layers:
   - Default
   - TransparentFX
@@ -15,8 +15,8 @@ TagManager:
   - 
   - Water
   - UI
-  - 
-  - 
+  - Bullets
+  - Player
   - 
   - 
   - 

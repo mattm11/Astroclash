@@ -27,6 +27,16 @@ public class bulletWeapon : NetworkBehaviour
         1.0f,
         0.05f
     };
+    private List<float> weaponStatCosts = new List<float>()
+    {
+        100.0f,
+        100.0f,
+        100.0f,
+        100.0f,
+        100.0f,
+        100.0f,
+        100.0f
+    };
     private List<string> statNames = new List<string>()
     {
         "Fire Rate",
@@ -42,6 +52,12 @@ public class bulletWeapon : NetworkBehaviour
         false,
         false,
         false
+    };
+    private List<float> stateCosts = new List<float>()
+    {
+        1000.0f,
+        1000.0f,
+        1000.0f
     };
     private List<string> stateNames = new List<string>()
     {
@@ -111,6 +127,10 @@ public class bulletWeapon : NetworkBehaviour
             //register UI elements and objects
             controller.registerCanvas(canvas);
             controller.registerUpdgradeUI(upgradeUI);
+
+            controller.registerPlayer(gameObject.transform.parent.gameObject);
+            controller.registerStatCosts(weaponStatCosts);
+            controller.registerStateCosts(stateCosts);
 
             controller.instantiateUI();
         }
@@ -319,10 +339,10 @@ public class bulletWeapon : NetworkBehaviour
         }
     }   
 
+    // Network Functions
     [ServerRpc]
     void fireBulletServerRpc(Vector3 _direction, Vector3 _position, float _projectileSpeed, float _projectileRange, float _projectileDamage)
     {
-        Debug.Log("Received fire bullet RPC");
         createBulletClientRpc(_direction, _position, _projectileSpeed, _projectileRange, _projectileDamage);
     }
 
@@ -332,6 +352,17 @@ public class bulletWeapon : NetworkBehaviour
         GameObject bullet = Instantiate(defaultBulletPref, _position, Quaternion.identity);
         bullet.GetComponent<Rigidbody2D>().AddForce(_direction * _projectileSpeed, ForceMode2D.Impulse);
         bullet.GetComponent<bulletProjectiles>().setStats(_projectileRange, _projectileDamage);
+
+        if (IsOwner && IsServer == false)
+        {
+            Debug.Log("Creating Friendly Bullet!");
+            bullet.tag = "friendlyBullet";
+        }
+        else
+        {
+            Debug.Log("Creating Enemy Bullet!");
+            bullet.tag = "enemyBullet";
+        }
     }
 
     // draws debug lines
