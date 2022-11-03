@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Unity.Netcode;
 using System;
+using UnityEngine.SceneManagement;
 using TMPro;
 
 public class playerController : NetworkBehaviour
@@ -31,19 +32,26 @@ public class playerController : NetworkBehaviour
     private GameObject currencyUI;
 
     public List<GameObject> weaponRegistry = new List<GameObject>();
+    private GameObject healthBar;
+
+    // player health for UI
+    private const float maxHealth = 100;
+    private NetworkVariable<float> currentHealth = new NetworkVariable<float>(maxHealth);
+    // player currency for round
+    private NetworkVariable<float> credits = new NetworkVariable<float>();
 
     private Camera playerCamera;
 
     void Start()
     {
-        Physics2D.IgnoreLayerCollision(6,7);
+        Physics2D.IgnoreLayerCollision(6, 7);
 
         if (IsOwner)
         {
             GameObject parent = gameObject.transform.parent.gameObject;
             playerCamera = parent.GetComponentInChildren<Camera>();
 
-            //Find canvas/even system
+            //Find canvas/event system
             canvas = gameObject.transform.Find("Canvas").gameObject;
             eventSystem = gameObject.transform.Find("EventSystem").gameObject;
 
@@ -57,6 +65,14 @@ public class playerController : NetworkBehaviour
             spaceStationUI = canvas.transform.Find("Space Station UI").gameObject;
             spaceStationButton = canvas.transform.Find("Space UI Button").gameObject;
             shipUpgradeUI = canvas.transform.Find("ShipUpgradeUI").gameObject;
+
+            //Find health bar, give base health
+            //healthBar = GameObject.Find("Health bar");
+            healthBar = canvas.transform.Find("Health bar").gameObject;
+            healthBar.GetComponent<HealthBar>().SetMaxHealth(maxHealth);
+
+            //Set initial credits for round
+            credits.Value = 0;
 
             //Find weapon objects
             bulletweaponObject = gameObject.transform.Find("BulletWeapon").gameObject;
@@ -86,19 +102,19 @@ public class playerController : NetworkBehaviour
             GameObject.Destroy(gameObject.transform.Find("Canvas").gameObject);
             GameObject.Destroy(gameObject.transform.Find("EventSystem").gameObject);
         }
-        
+
     }
-    
+
     // Update is called once per frame
     void Update()
     {
-        if (IsOwner) 
+        if (IsOwner)
         {
             //update the camera origin
             Vector3 newPosition = playerCamera.transform.position;
             newPosition.x = gameObject.transform.position.x;
             newPosition.y = gameObject.transform.position.y;
-            playerCamera.transform.position= newPosition;
+            playerCamera.transform.position = newPosition;
 
             //Movement is broken down into: X = Movement_Speed * cos(rotation_angle) Y = Movement_Speed * sin(rotation_angle)
             float angle = (float)(transform.eulerAngles.z * (Math.PI / 180));
@@ -109,7 +125,7 @@ public class playerController : NetworkBehaviour
             if (Input.GetKey(KeyCode.W))
             {
                 //adding player speed, until max speed is reached
-                if(velocity + acceleration <= maxVelocity)
+                if (velocity + acceleration <= maxVelocity)
                 {
                     velocity += acceleration * Time.deltaTime;
                 }
@@ -117,7 +133,7 @@ public class playerController : NetworkBehaviour
                 {
                     velocity += 0.25f * Time.deltaTime;
                 }
-                else 
+                else
                 {
                     velocity = maxVelocity;
                 }
@@ -125,7 +141,7 @@ public class playerController : NetworkBehaviour
             //Slow down
             else if (Input.GetKey(KeyCode.S))
             {
-                if((velocity - acceleration) > 0)
+                if ((velocity - acceleration) > 0)
                 {
                     velocity -= (acceleration) * Time.deltaTime;
                 }
@@ -133,7 +149,7 @@ public class playerController : NetworkBehaviour
                 {
                     velocity -= 0.25f * Time.deltaTime;
                 }
-                else 
+                else
                 {
                     velocity = 0.0f;
                 }
@@ -141,6 +157,12 @@ public class playerController : NetworkBehaviour
 
             currencyUI.GetComponent<TMP_Text>().text = money.ToString();
             repair();
+
+            if (Input.GetKeyDown(KeyCode.Space))
+            {
+                TakeDamage(20);
+            }
+            healthBar.GetComponent<HealthBar>().SetHealth(currentHealth.Value);
         }
     }
 
@@ -153,9 +175,9 @@ public class playerController : NetworkBehaviour
                 UILogic.GetComponent<UIRegistrar>().enableIndex(0);
                 disableWeapons();
             }
-                   
+
         }
-        
+
         // bullet weapon interaction logic
         if (collider.gameObject.tag == "enemyBullet" && IsOwner)
         {
@@ -175,10 +197,27 @@ public class playerController : NetworkBehaviour
         if (IsOwner)
         {
             if (collider.gameObject.name == "Space Station")
-            UILogic.GetComponent<UIRegistrar>().disableAll();
+                UILogic.GetComponent<UIRegistrar>().disableAll();
             enableWeapons();
         }
-        
+
+    }
+
+    private void TakeDamage(int damage)
+    {
+        currentHealth.Value -= damage;
+
+        healthBar.GetComponent<HealthBar>().SetHealth(currentHealth.Value);
+
+        if (currentHealth.Value <= 0)
+        {
+            SceneManager.LoadScene("DeathScreen");
+        }
+    }
+
+    private void PickupCredits(int amount)
+    {
+        credits.Value += amount;
     }
 
     private void takeDamage(float damage)

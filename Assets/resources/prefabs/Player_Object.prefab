@@ -182,6 +182,12 @@ MonoBehaviour:
   money: 0
   health: 100
   repairAmount: 1
+  maxHealth: 100
+  currentHealth:
+    m_InternalValue: 0
+  healthBar: {fileID: 6372377801980368831, guid: 0872a9e41af47dd4d8befa7b46ba360a, type: 3}
+  credits:
+    m_InternalValue: 0
   UILogic: {fileID: 0}
   weaponRegistry:
   - {fileID: 6378874379617464154}
@@ -398,6 +404,18 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 8637928853064066863}
     m_Modifications:
+    - target: {fileID: 1913125375216287793, guid: 07422cbb22d6b4a4b8d4287e2a547741, type: 3}
+      propertyPath: m_AnchorMax.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1913125375216287793, guid: 07422cbb22d6b4a4b8d4287e2a547741, type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3748403976159566602, guid: 07422cbb22d6b4a4b8d4287e2a547741, type: 3}
+      propertyPath: m_RootOrder
+      value: 4
+      objectReference: {fileID: 0}
     - target: {fileID: 5657362198622189284, guid: 07422cbb22d6b4a4b8d4287e2a547741, type: 3}
       propertyPath: m_Pivot.x
       value: 0
