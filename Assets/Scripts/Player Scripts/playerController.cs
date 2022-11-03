@@ -18,7 +18,6 @@ public class playerController : NetworkBehaviour
 
     public float money = 0.0f;
     public float health = 100.0f;
-    private float maxHealth = 100.0f;
     public float repairAmount = 1.0f; //hull repaired passively per second
 
     public GameObject UILogic;
@@ -35,8 +34,10 @@ public class playerController : NetworkBehaviour
     private GameObject healthBar;
 
     // player health for UI
-    private const float maxHealth = 100;
-    private NetworkVariable<float> currentHealth = new NetworkVariable<float>(maxHealth);
+    
+    private const float DEFAULT_MAX_HEALTH = 100;
+    private float maxHealth = DEFAULT_MAX_HEALTH;
+    private NetworkVariable<float> currentHealth = new NetworkVariable<float>(DEFAULT_MAX_HEALTH);
     // player currency for round
     private NetworkVariable<float> credits = new NetworkVariable<float>();
 
@@ -44,6 +45,7 @@ public class playerController : NetworkBehaviour
 
     void Start()
     {
+        // bullet and player collision ignore
         Physics2D.IgnoreLayerCollision(6, 7);
 
         if (IsOwner)
@@ -182,7 +184,7 @@ public class playerController : NetworkBehaviour
         if (collider.gameObject.tag == "enemyBullet" && IsOwner)
         {
             GameObject.Destroy(collider.gameObject);
-            takeDamage(collider.gameObject.GetComponent<bulletProjectiles>().getDamage());
+            TakeDamage(collider.gameObject.GetComponent<bulletProjectiles>().getDamage());
         }
 
         // logic to destroy the bullet that collided with other objects
@@ -203,7 +205,7 @@ public class playerController : NetworkBehaviour
 
     }
 
-    private void TakeDamage(int damage)
+    private void TakeDamage(float damage)
     {
         currentHealth.Value -= damage;
 
@@ -220,28 +222,15 @@ public class playerController : NetworkBehaviour
         credits.Value += amount;
     }
 
-    private void takeDamage(float damage)
-    {
-        if (health - damage <= 0.0f)
-        {
-            health = 0.0f;
-            //Death logic
-        }
-        else
-        {
-            health -= damage;
-        }
-    }
-
     private void repair()
     {
-        if (health + (repairAmount * Time.deltaTime) <= maxHealth)
+        if (currentHealth.Value + (repairAmount * Time.deltaTime) <= maxHealth)
         {
-            health += repairAmount * Time.deltaTime;
+            currentHealth.Value += repairAmount * Time.deltaTime;
         }
-        else if (health + (repairAmount * Time.deltaTime) > maxHealth)
+        else if (currentHealth.Value + (repairAmount * Time.deltaTime) > maxHealth)
         {
-            health = maxHealth;
+            currentHealth.Value = maxHealth;
         }
     }
     private void disableWeapons()
@@ -282,11 +271,16 @@ public class playerController : NetworkBehaviour
     }
     public void setHealth(float _health)
     {
-        health = _health;
+        currentHealth.Value = _health;
     }
+    // Upgrade function for health
     public void setMaxHealth(float _maxHealth)
     {
         maxHealth = _maxHealth;
+        healthBar.GetComponent<HealthBar>().SetMaxHealth(maxHealth);
+
+        healthBar.GetComponent<HealthBar>().transform.localScale += new Vector3(0.2f, 0.0f, 0.0f);
+        healthBar.GetComponent<RectTransform>().localPosition += new Vector3(30.0f, 0.0f, 0.0f);
     }
     public float getMaxVelocity()
     {
