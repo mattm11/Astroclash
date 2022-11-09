@@ -8,13 +8,16 @@ EditorBuildSettings:
   - enabled: 0
     path: Assets/Scenes/TitleScreen.unity
     guid: d909731efce73634dbd0f4cdc7610f45
-  - enabled: 0
+  - enabled: 1
     path: Assets/Scenes/Network Scene Final.unity
     guid: a3ed4d13b98b17f48832baae67115238
   - enabled: 0
     path: Assets/Scenes/Evan Sandbox/Local Sandbox.unity
     guid: 2cda990e2423bbf4892e6590ba056729
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/Evan Sandbox/Network Sandbox.unity
     guid: 781f742f00482ec4494e66e44166f631
+  - enabled: 0
+    path: Assets/Scenes/DeathScreen.unity
+    guid: f1127aa266eb3564385f5ec1fba3a891
   m_configObjects: {}

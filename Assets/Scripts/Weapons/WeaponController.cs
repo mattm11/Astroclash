@@ -34,7 +34,7 @@ namespace Astroclash
 
                 for (int i = 0; i < _stats.Count; i++)
                 {
-                    GameObject module = (GameObject)Instantiate(prefab, new Vector3(30, i * -30 + -30 + 500, 0), Quaternion.identity);
+                    GameObject module = (GameObject)Instantiate(prefab, new Vector3(30, i * -30, 0), Quaternion.identity);
                     module.SetActive(false);
                     module.transform.parent = canvas.gameObject.transform;
                     module.tag = "UIModule";
@@ -340,6 +340,10 @@ namespace Astroclash
         {
             return weaponStats[_statName];
         }
+        public void setStatIncrement(string _statName, float _increment)
+        {
+            weaponIncrements[_statName] = _increment;
+        }
         public bool getState(string _stateName)
         {
             return weaponStates[_stateName];
@@ -373,6 +377,17 @@ namespace Astroclash
                 {
                     GameObject statUIElement = upgradeUI.transform.Find(weaponStatsNames[i]).gameObject;
                     statUIElement.AddComponent<Button>();
+
+                    ColorBlock buttonColor = new ColorBlock();
+                    buttonColor.normalColor = Color.white;
+                    buttonColor.highlightedColor = new Color(0.5f, 1.0f, 0.5f);
+                    buttonColor.pressedColor = Color.green;
+                    buttonColor.selectedColor = Color.white;
+                    buttonColor.disabledColor = Color.grey;
+                    buttonColor.colorMultiplier = 1.0f;
+                    buttonColor.fadeDuration = 0.1f;
+
+                    statUIElement.GetComponent<Button>().colors = buttonColor;
                     string name = weaponStatsNames[i];
                     statUIElement.GetComponent<Button>().onClick.AddListener(() => increaseStat(name));
                     statUIObjects.Add(statUIElement);
@@ -392,6 +407,18 @@ namespace Astroclash
                 string state = stateNames[i];
                 stateUIElement.GetComponent<Button>().onClick.AddListener(() => setState(state));
                 stateUIElement.GetComponent<Button>().enabled = false;
+
+                ColorBlock buttonColor = new ColorBlock();
+                buttonColor.normalColor = Color.white;
+                buttonColor.highlightedColor = new Color(0.5f, 1.0f, 0.5f);
+                buttonColor.pressedColor = Color.green;
+                buttonColor.selectedColor = Color.white;
+                buttonColor.disabledColor = Color.grey;
+                buttonColor.colorMultiplier = 1.0f;
+                buttonColor.fadeDuration = 0.1f;
+
+                stateUIElement.GetComponent<Button>().colors = buttonColor;
+
                 stateUIObjects.Add(stateUIElement);
             }
         }

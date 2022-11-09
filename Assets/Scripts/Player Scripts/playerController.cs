@@ -10,15 +10,14 @@ public class playerController : NetworkBehaviour
 {
 
     //acceleration amount per second added to velocity. de-acceleration is 2:1 proportional to acceleration
-    public float acceleration = 1.0f;
+    private float acceleration = 1.0f;
     //maximum speed of player ship
-    public float maxVelocity = 3.0f;
-    public float velocity = 0.0f;
+    private float maxVelocity = 3.0f;
+    private float velocity = 0.0f;
     private Vector3 rotationDieOff = new Vector3(0.0f, 0.0f, 0.0f);
 
-    public float money = 0.0f;
-    public float health = 100.0f;
-    public float repairAmount = 1.0f; //hull repaired passively per second
+    private float money = 10000.0f;
+    private float repairAmount = 1.0f; //hull repaired passively per second
 
     public GameObject UILogic;
     private GameObject canvas;
@@ -37,7 +36,8 @@ public class playerController : NetworkBehaviour
     
     private const float DEFAULT_MAX_HEALTH = 100;
     private float maxHealth = DEFAULT_MAX_HEALTH;
-    private NetworkVariable<float> currentHealth = new NetworkVariable<float>(DEFAULT_MAX_HEALTH);
+    private float health = DEFAULT_MAX_HEALTH;
+    // private NetworkVariable<float> currentHealth = new NetworkVariable<float>(DEFAULT_MAX_HEALTH);
     // player currency for round
     private NetworkVariable<float> credits = new NetworkVariable<float>();
 
@@ -45,9 +45,6 @@ public class playerController : NetworkBehaviour
 
     void Start()
     {
-        // bullet and player collision ignore
-        Physics2D.IgnoreLayerCollision(6, 7);
-
         if (IsOwner)
         {
             GameObject parent = gameObject.transform.parent.gameObject;
@@ -101,8 +98,8 @@ public class playerController : NetworkBehaviour
         // Remove other non-client player's UI elements and event system
         else
         {
-            GameObject.Destroy(gameObject.transform.Find("Canvas").gameObject);
-            GameObject.Destroy(gameObject.transform.Find("EventSystem").gameObject);
+            gameObject.transform.Find("Canvas").gameObject.SetActive(false);
+            gameObject.transform.Find("EventSystem").gameObject.SetActive(false);
         }
 
     }
@@ -160,11 +157,7 @@ public class playerController : NetworkBehaviour
             currencyUI.GetComponent<TMP_Text>().text = money.ToString();
             repair();
 
-            if (Input.GetKeyDown(KeyCode.Space))
-            {
-                TakeDamage(20);
-            }
-            healthBar.GetComponent<HealthBar>().SetHealth(currentHealth.Value);
+            healthBar.GetComponent<HealthBar>().SetHealth(health);
         }
     }
 
@@ -199,19 +192,20 @@ public class playerController : NetworkBehaviour
         if (IsOwner)
         {
             if (collider.gameObject.name == "Space Station")
+            {
                 UILogic.GetComponent<UIRegistrar>().disableAll();
-            enableWeapons();
+                enableWeapons();
+            }   
         }
-
     }
 
     private void TakeDamage(float damage)
     {
-        currentHealth.Value -= damage;
+        health -= damage;
 
-        healthBar.GetComponent<HealthBar>().SetHealth(currentHealth.Value);
+        healthBar.GetComponent<HealthBar>().SetHealth(health);
 
-        if (currentHealth.Value <= 0)
+        if (health <= 0)
         {
             SceneManager.LoadScene("DeathScreen");
         }
@@ -224,13 +218,13 @@ public class playerController : NetworkBehaviour
 
     private void repair()
     {
-        if (currentHealth.Value + (repairAmount * Time.deltaTime) <= maxHealth)
+        if (health + (repairAmount * Time.deltaTime) <= maxHealth)
         {
-            currentHealth.Value += repairAmount * Time.deltaTime;
+            health += repairAmount * Time.deltaTime;
         }
-        else if (currentHealth.Value + (repairAmount * Time.deltaTime) > maxHealth)
+        else if (health + (repairAmount * Time.deltaTime) > maxHealth)
         {
-            currentHealth.Value = maxHealth;
+            health = maxHealth;
         }
     }
     private void disableWeapons()
@@ -271,7 +265,7 @@ public class playerController : NetworkBehaviour
     }
     public void setHealth(float _health)
     {
-        currentHealth.Value = _health;
+        health = _health;
     }
     // Upgrade function for health
     public void setMaxHealth(float _maxHealth)
