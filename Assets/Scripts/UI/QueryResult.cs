@@ -9,13 +9,16 @@ namespace Astroclash
     {
         private List<string> userNames;
         private List<int> playerScores;
+        public int resultCount;
 
-        QueryResult(List<string> _userNames, List<int> _playerScores)
+        public QueryResult(List<string> _userNames, List<int> _playerScores)
         {
             if (_userNames.Count == _playerScores.Count)
             {
                 userNames = _userNames;
                 playerScores = _playerScores;
+
+                resultCount = _userNames.Count;
             }
             else
             {

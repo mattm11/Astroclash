@@ -28,6 +28,7 @@ public class playerController : NetworkBehaviour
     private GameObject shipUpgradeUI;
     private GameObject spaceStationButton;
     private GameObject currencyUI;
+    private GameObject scoreBoardUI;
 
     public List<GameObject> weaponRegistry = new List<GameObject>();
     private GameObject healthBar;
@@ -37,9 +38,7 @@ public class playerController : NetworkBehaviour
     private const float DEFAULT_MAX_HEALTH = 100;
     private float maxHealth = DEFAULT_MAX_HEALTH;
     private float health = DEFAULT_MAX_HEALTH;
-    // private NetworkVariable<float> currentHealth = new NetworkVariable<float>(DEFAULT_MAX_HEALTH);
-    // player currency for round
-    private NetworkVariable<float> credits = new NetworkVariable<float>();
+    private int score = 0;
 
     private Camera playerCamera;
 
@@ -70,9 +69,6 @@ public class playerController : NetworkBehaviour
             healthBar = canvas.transform.Find("Health bar").gameObject;
             healthBar.GetComponent<HealthBar>().SetMaxHealth(maxHealth);
 
-            //Set initial credits for round
-            credits.Value = 0;
-
             //Find weapon objects
             bulletweaponObject = gameObject.transform.Find("BulletWeapon").gameObject;
 
@@ -84,6 +80,9 @@ public class playerController : NetworkBehaviour
 
             //Find the UILogic object
             UILogic = canvas.transform.Find("UILogic").gameObject;
+
+            //Find score board UI
+            scoreBoardUI = canvas.transform.Find("High Score UI").gameObject;
 
             //setup and turn off canvas and event system
             canvas.transform.SetParent(null);
@@ -207,15 +206,11 @@ public class playerController : NetworkBehaviour
 
         if (health <= 0)
         {
+            //TODO: call postScore from ScoreBoard object
+            // scoreBoardUI.GetComponent<ScoreBoard>().postScore(_userName, _score)
             SceneManager.LoadScene("DeathScreen");
         }
     }
-
-    private void PickupCredits(int amount)
-    {
-        credits.Value += amount;
-    }
-
     private void repair()
     {
         if (health + (repairAmount * Time.deltaTime) <= maxHealth)
@@ -267,7 +262,6 @@ public class playerController : NetworkBehaviour
     {
         health = _health;
     }
-    // Upgrade function for health
     public void setMaxHealth(float _maxHealth)
     {
         maxHealth = _maxHealth;
@@ -299,5 +293,13 @@ public class playerController : NetworkBehaviour
     public void setRepair(float _repairAmount)
     {
         repairAmount = _repairAmount;
+    }
+    public int getScore()
+    {
+        return score;
+    }
+    public void setScore(int _score)
+    {
+        score = _score;
     }
 }
