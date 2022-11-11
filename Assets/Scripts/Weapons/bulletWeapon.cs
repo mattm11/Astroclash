@@ -161,48 +161,48 @@ public class bulletWeapon : NetworkBehaviour
                     Debug.DrawLine(transform.position, mouseRealtivePosition, Color.red);
                 drawAngle(controller.getStat("Shot Spread"));
             }
-        }
 
-        // Upgrade changes and stat changes when selecting a new state
-        if ((controller.getState("Shotgun") || controller.getState("Machine Gun") || controller.getState("Sniper")) && stateChange == false)
-        {
-            stateChange = true;
-            
-            //change stat-increments current stats
-            if (controller.getState("Shotgun"))
+            // Upgrade changes and stat changes when selecting a new state
+            if ((controller.getState("Shotgun") || controller.getState("Machine Gun") || controller.getState("Sniper")) && stateChange == false)
             {
-                controller.setStat("Fire Rate", controller.getStat("Fire Rate") / 1.5f);
-                controller.setStat("Shot Spread", controller.getStat("Shot Spread") * 2.0f);
-                controller.setStat("Projectile Damage", controller.getStat("Projectile Damage") / 3.0f);
-                controller.setStat("Projectile Range", controller.getStat("Projectile Range") / 4.0f);
+                stateChange = true;
+                
+                //change stat-increments current stats
+                if (controller.getState("Shotgun"))
+                {
+                    controller.setStat("Fire Rate", controller.getStat("Fire Rate") / 1.5f);
+                    controller.setStat("Shot Spread", controller.getStat("Shot Spread") * 2.0f);
+                    controller.setStat("Projectile Damage", controller.getStat("Projectile Damage") / 3.0f);
+                    controller.setStat("Projectile Range", controller.getStat("Projectile Range") / 4.0f);
 
-                controller.setStatIncrement("Fire Rate", 0.05f);
-                controller.setStatIncrement("Shot Spread", 0.2f);
-                controller.setStatIncrement("Projectile Damage", 0.5f);
-                controller.setStatIncrement("Projectile Range", 0.5f);
-                controller.setStatIncrement("Projectile Count", 1.0f);
-            }
-            else if (controller.getState("Machine Gun"))
-            {
-                controller.setStat("Fire Rate", controller.getStat("Fire Rate") * 1.1f);
-                controller.setStat("Shot Spread", controller.getStat("Shot Spread") * 3.0f);
+                    controller.setStatIncrement("Fire Rate", 0.05f);
+                    controller.setStatIncrement("Shot Spread", 0.2f);
+                    controller.setStatIncrement("Projectile Damage", 0.5f);
+                    controller.setStatIncrement("Projectile Range", 0.5f);
+                    controller.setStatIncrement("Projectile Count", 1.0f);
+                }
+                else if (controller.getState("Machine Gun"))
+                {
+                    controller.setStat("Fire Rate", controller.getStat("Fire Rate") * 1.1f);
+                    controller.setStat("Shot Spread", controller.getStat("Shot Spread") * 3.0f);
 
-                controller.setStatIncrement("Fire Rate", 0.2f);
-                controller.setStatIncrement("Shot Spread", 0.2f);
-                controller.setStatIncrement("Projectile Damage", 0.25f);
-                controller.setStatIncrement("Projectile Range", 1.0f);
-                controller.setStatIncrement("Projectile Count", 0.15f);
-            }
-            else if (controller.getState("Sniper"))
-            {
-                controller.setStat("Fire Rate", controller.getStat("Fire Rate") / 1.5f);
-                controller.setStat("Projectile Damage", controller.getStat("Projectile Damage") * 1.5f);
+                    controller.setStatIncrement("Fire Rate", 0.2f);
+                    controller.setStatIncrement("Shot Spread", 0.2f);
+                    controller.setStatIncrement("Projectile Damage", 0.25f);
+                    controller.setStatIncrement("Projectile Range", 1.0f);
+                    controller.setStatIncrement("Projectile Count", 0.15f);
+                }
+                else if (controller.getState("Sniper"))
+                {
+                    controller.setStat("Fire Rate", controller.getStat("Fire Rate") / 1.5f);
+                    controller.setStat("Projectile Damage", controller.getStat("Projectile Damage") * 1.5f);
 
-                controller.setStatIncrement("Fire Rate", 0.05f);
-                controller.setStatIncrement("Shot Spread", 0.0f);
-                controller.setStatIncrement("Projectile Damage", 1.5f);
-                controller.setStatIncrement("Projectile Range", 2.0f);
-                controller.setStatIncrement("Projectile Count", 0.34f);
+                    controller.setStatIncrement("Fire Rate", 0.05f);
+                    controller.setStatIncrement("Shot Spread", 0.0f);
+                    controller.setStatIncrement("Projectile Damage", 1.5f);
+                    controller.setStatIncrement("Projectile Range", 2.0f);
+                    controller.setStatIncrement("Projectile Count", 0.34f);
+                }
             }
         }
     }    
