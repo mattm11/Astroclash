@@ -15,6 +15,7 @@ public class playerController : NetworkBehaviour
     private float maxVelocity = 3.0f;
     private float velocity = 0.0f;
     private Vector3 rotationDieOff = new Vector3(0.0f, 0.0f, 0.0f);
+    private int debrisAmount = 3;
 
     private float money = 10000.0f;
     private float repairAmount = 1.0f; //hull repaired passively per second
@@ -207,7 +208,10 @@ public class playerController : NetworkBehaviour
 
         if (health <= 0)
         {
-            SceneManager.LoadScene("DeathScreen");
+            spawnDebrisServerRpc(gameObject.transform.position);
+            ulong clientID = gameObject.transform.parent.gameObject.GetComponent<NetworkObject>().OwnerClientId;
+            ulong objectID = gameObject.transform.parent.gameObject.GetComponent<NetworkObject>().NetworkObjectId;
+            despawnPlayerServerRpc(clientID, objectID);
         }
     }
 
@@ -267,7 +271,6 @@ public class playerController : NetworkBehaviour
     {
         health = _health;
     }
-    // Upgrade function for health
     public void setMaxHealth(float _maxHealth)
     {
         maxHealth = _maxHealth;
@@ -299,5 +302,39 @@ public class playerController : NetworkBehaviour
     public void setRepair(float _repairAmount)
     {
         repairAmount = _repairAmount;
+    }
+
+    //handles player despawn sync
+    [ServerRpc]
+    private void spawnDebrisServerRpc(Vector3 _position)
+    {
+        spawnDebrisClientRpc(_position);
+    }
+    [ServerRpc]
+    private void despawnPlayerServerRpc(ulong _clientID, ulong _objectID)
+    {
+        ClientRpcParams clientRpcParams = new ClientRpcParams
+        {
+            Send = new ClientRpcSendParams
+            {
+                TargetClientIds = new ulong[]{_clientID}
+            }
+        };
+        loadDeathSceneClientRpc(clientRpcParams);
+        GameObject.FindGameObjectWithTag("Spawn Manager").GetComponent<SpawnManager>().despawnEntity(_objectID);
+    }
+    [ClientRpc]
+    private void spawnDebrisClientRpc(Vector3 _position)
+    {
+        UnityEngine.Object debris = Resources.Load("prefabs/Debris");
+        for (int i = 0; i < debrisAmount; i++)
+        {
+            Instantiate(debris, _position, Quaternion.identity);
+        }
+    }
+    [ClientRpc]
+    private void loadDeathSceneClientRpc(ClientRpcParams clientRpcParams = default)
+    {
+        SceneManager.LoadScene("DeathScreen");
     }
 }
