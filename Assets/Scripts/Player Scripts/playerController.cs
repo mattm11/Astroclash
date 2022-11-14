@@ -37,7 +37,7 @@ public class playerController : NetworkBehaviour
     
     private const float DEFAULT_MAX_HEALTH = 100;
     private float maxHealth = DEFAULT_MAX_HEALTH;
-    private float health = DEFAULT_MAX_HEALTH;
+    public float health = DEFAULT_MAX_HEALTH;
     // private NetworkVariable<float> currentHealth = new NetworkVariable<float>(DEFAULT_MAX_HEALTH);
     // player currency for round
     private NetworkVariable<float> credits = new NetworkVariable<float>();
@@ -276,8 +276,24 @@ public class playerController : NetworkBehaviour
         maxHealth = _maxHealth;
         healthBar.GetComponent<HealthBar>().SetMaxHealth(maxHealth);
 
-        healthBar.GetComponent<HealthBar>().transform.localScale += new Vector3(0.2f, 0.0f, 0.0f);
-        healthBar.GetComponent<RectTransform>().localPosition += new Vector3(30.0f, 0.0f, 0.0f);
+        if (_maxHealth <= 1000)
+        {    
+            GameObject UIMiddle = healthBar.transform.Find("Border").transform.Find("Middle").gameObject;
+            GameObject UIFront = healthBar.transform.Find("Border").transform.Find("Front").gameObject;
+            GameObject Fill = healthBar.transform.Find("Fill").gameObject;
+
+            float width = UIMiddle.GetComponent<RectTransform>().sizeDelta.x;
+            float height = UIMiddle.GetComponent<RectTransform>().sizeDelta.y;
+            Vector2 newWidth = new Vector2(width + 50.0f, height);
+            UIMiddle.GetComponent<RectTransform>().sizeDelta = newWidth;
+
+            Fill.GetComponent<RectTransform>().offsetMax += new Vector2(7.5f, Fill.GetComponent<RectTransform>().offsetMax.y);
+            Fill.GetComponent<RectTransform>().offsetMax = new Vector2(Fill.GetComponent<RectTransform>().offsetMax.x, 0.0f);
+
+            UIMiddle.transform.localPosition += new Vector3(3.5f, 0.0f, 0.0f);
+            UIFront.transform.localPosition += new Vector3(7.2f, 0.0f, 0.0f);
+        }
+
     }
     public float getMaxVelocity()
     {
