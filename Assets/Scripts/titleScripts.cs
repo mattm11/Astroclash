@@ -9,9 +9,9 @@ public class titleScripts : MonoBehaviour
         Application.Quit();
     }
 
-    public void start()
+    public void changeScene(string _sceneName)
     {
-        Debug.Log("Starting the game...");
-        SceneManager.LoadScene("Network Scene Final");
+        Debug.Log("Loading Scene: " + _sceneName);
+        SceneManager.LoadScene(_sceneName);
     }
 }

@@ -352,6 +352,8 @@ public class playerController : NetworkBehaviour
     private void loadDeathSceneClientRpc(ClientRpcParams clientRpcParams = default)
     {
         NetworkManager.Singleton.Shutdown();
-        SceneManager.LoadScene("DeathScreen");
+        // SceneManager.LoadScene("DeathScreen");
+        SceneManager.LoadScene("EvanDeathScreen");
+        GameObject.Destroy(GameObject.Find("Network Manager"));
     }
 }

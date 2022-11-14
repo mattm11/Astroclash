@@ -116,6 +116,14 @@ namespace Astroclash
             stateNames = _stateNames;
             states = _states;
 
+            //clear in case of previous game memory conflicts
+            weaponIncrements.Clear();
+            weaponStats.Clear();
+            weaponStatCosts.Clear();
+            weaponStateCosts.Clear();
+            weaponStates.Clear();
+            stateRequirements.Clear();
+
             for (int i = 0; i < stats.Count; i++)
             {
                 weaponIncrements.Add(weaponStatsNames[i], weaponStatsIncrement[i]);
