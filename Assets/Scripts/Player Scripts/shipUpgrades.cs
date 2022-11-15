@@ -8,6 +8,8 @@ public class shipUpgrades : MonoBehaviour
     private float hullUpgradeCost = 100.0f;
     private float speedUpgradeCost = 100.0f;
     private float repairUpgradeCost = 100.0f;
+    private float capactiyUpgradeCost = 100.0f;
+    private float rechargeUpgradeCost = 100.0f;
 
 
     void Start()
@@ -64,6 +66,29 @@ public class shipUpgrades : MonoBehaviour
             player.GetComponent<playerController>().setRepair(newRepair);
 
             player.GetComponent<playerController>().subtractCurrency(repairUpgradeCost);
+        }
+    }
+
+    public void upgradeEnergyCapacity(float _energyCapacityIncrement)
+    {
+        if (player.GetComponent<playerController>().getCurrency() >= capactiyUpgradeCost)
+        {
+            float newCap = player.GetComponent<playerController>().getMaxEnergy() + _energyCapacityIncrement;
+            player.GetComponent<playerController>().setEnergy(newCap);
+            player.GetComponent<playerController>().setMaxEnergy(newCap);
+
+            player.GetComponent<playerController>().subtractCurrency(capactiyUpgradeCost);
+        }
+    }
+
+    public void upgradeRecharge(float _rechargeIncrement)
+    {
+        if (player.GetComponent<playerController>().getCurrency() >= rechargeUpgradeCost)
+        {
+            float newRecharge = player.GetComponent<playerController>().getRechargeRate() + _rechargeIncrement;
+            player.GetComponent<playerController>().setRechargeRate(newRecharge);
+
+            player.GetComponent<playerController>().subtractCurrency(rechargeUpgradeCost);
         }
     }
 }

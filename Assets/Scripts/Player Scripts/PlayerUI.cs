@@ -12,15 +12,15 @@ public class PlayerUI : NetworkBehaviour
 
     //public HealthBar healthBar;
     public GameObject healthBar;
-    public HealthBar playerHealth;
+    public UIBar playerHealth;
 
     void Start()
     {
         credits.Value = 0;
         healthBar = GameObject.Find("Health bar");
-        playerHealth = healthBar.GetComponent<HealthBar>();
+        playerHealth = healthBar.GetComponent<UIBar>();
         currentHealth.Value = maxHealth;
-        playerHealth.SetMaxHealth(maxHealth);
+        playerHealth.SetMaxValue(maxHealth);
     }
 
     void Update()
@@ -29,23 +29,18 @@ public class PlayerUI : NetworkBehaviour
         {
             TakeDamage(20);
         }
-        playerHealth.SetHealth(currentHealth.Value);
+        playerHealth.SetValue(currentHealth.Value);
     }
 
     void TakeDamage(int damage)
     {
         currentHealth.Value -= damage;
 
-        playerHealth.SetHealth(currentHealth.Value);
+        playerHealth.SetValue(currentHealth.Value);
 
         if (currentHealth.Value <= 0)
         {
             SceneManager.LoadScene("DeathScreen");
         }
-    }
-
-    void PickupCredits(int amount)
-    {
-        credits.Value += amount;
     }
 }
