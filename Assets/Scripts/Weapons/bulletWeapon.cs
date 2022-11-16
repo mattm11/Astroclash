@@ -9,7 +9,7 @@ public class bulletWeapon : NetworkBehaviour
     // Weapon Registrars 
     private List<float> weaponStats = new List<float>()
     {
-        1.0f,   // Default rounds per second
+        2.0f,   // Default rounds per second
         0.2f,   // Default angle of spread
         5.0f,  // Default projectile speed
         5.0f,   // Default damage
@@ -24,7 +24,7 @@ public class bulletWeapon : NetworkBehaviour
         0.5f,
         1.0f,
         1.0f,
-        0.5f,
+        0.25f,
         0.00f
     };
     private List<float> weaponStatCosts = new List<float>()
@@ -75,38 +75,39 @@ public class bulletWeapon : NetworkBehaviour
     StateRequirement sniperReq = new StateRequirement(
         "Sniper",
         new List<string>() {"Projectile Damage", "Projectile Speed", "Projectile Range"},
-        new List<float>() {15.0f, 12.0f, 15.0f}
+        new List<float>() {10.0f, 10.0f, 15.0f}
     );
 
     StateRequirement shotgunReq = new StateRequirement(
         "Shotgun",
         new List<string>() {"Shot Spread", "Projectile Count"},
-        new List<float>() {0.6f, 3.0f}
+        new List<float>() {0.7f, 2.0f}
     );
 
     StateRequirement machineGunReq = new StateRequirement(
         "Machine Gun",
         new List<string>() {"Fire Rate", "Projectile Count"},
-        new List<float>() {1.5f, 3.0f}
+        new List<float>() {2.5f, 2.0f}
     );
     
     // Default Weapon Bullet
     public GameObject defaultBulletPref;
+    public List<GameObject> otherBullets = new List<GameObject>();
+    private GameObject player;
     
     // Weapon Controller
     private WeaponController controller = null;
     
     // Weapon Specific Variables
-    private bool burstFlag = false;
     private float sumDeltaTime = 0.0f;
     private float burstSumDeltaTime = 0.0f;
-    private float burstCount = 0.0f;
     private bool stateChange = false;
 
     void Start()
     {
         if (IsOwner)
         {     
+            player = gameObject.transform.parent.gameObject;
             GameObject.Destroy(gameObject.GetComponent<NetworkObject>());
 
             //setup weapon controller
@@ -135,6 +136,8 @@ public class bulletWeapon : NetworkBehaviour
             controller.registerStateCosts(stateCosts);
 
             controller.instantiateUI();
+
+            controller.registerUpgradeCounters();
         }
         
     }
@@ -145,12 +148,15 @@ public class bulletWeapon : NetworkBehaviour
         if (IsOwner && IsServer == false)
         {
             controller.step(); //calls controller debugger to step each frame as well as state management
-
-            if (Input.GetKey(KeyCode.Space) && burstFlag == false)
+            
+            if (Input.GetKey(KeyCode.Space) && controller.getState("Sniper") != true)
+            {
                 shoot();
-
-            if (burstFlag == true)
+            }    
+            else if (Input.GetKeyUp(KeyCode.Space) && controller.getState("Sniper") == true)
+            {
                 burst();
+            }
 
             //debug tools block
             if (controller.isDebug())
@@ -191,6 +197,8 @@ public class bulletWeapon : NetworkBehaviour
                     controller.setStatIncrement("Projectile Damage", 0.25f);
                     controller.setStatIncrement("Projectile Range", 1.0f);
                     controller.setStatIncrement("Projectile Count", 0.15f);
+
+                    // controller.setBulletPrefab(otherBullets[0]);
                 }
                 else if (controller.getState("Sniper"))
                 {
@@ -202,6 +210,8 @@ public class bulletWeapon : NetworkBehaviour
                     controller.setStatIncrement("Projectile Damage", 1.5f);
                     controller.setStatIncrement("Projectile Range", 2.0f);
                     controller.setStatIncrement("Projectile Count", 0.34f);
+
+                    // controller.setBulletPrefab(otherBullets[1]);
                 }
             }
         }
@@ -211,9 +221,24 @@ public class bulletWeapon : NetworkBehaviour
     {
         sumDeltaTime += Time.deltaTime;
         float secondsPerRound = 1.0f / controller.getStat("Fire Rate");
+        float energyCost = controller.getStat("Projectile Damage") * controller.getStat("Projectile Count");
+        float currEnergy = player.GetComponent<playerController>().getEnergy();
 
-        if (sumDeltaTime >= secondsPerRound && burstFlag == false)
+        float relativeBulletSpeed = controller.getStat("Projectile Speed") + player.GetComponent<playerController>().getVelocity();
+
+        if (sumDeltaTime >= secondsPerRound && currEnergy > 0.0f)
         {
+            if(currEnergy - energyCost < 0.0f)
+            {
+                //penality for over use of energy (3 seconds)
+                float energyPenality = -3.0f * player.GetComponent<playerController>().getRechargeRate();
+                player.GetComponent<playerController>().setEnergy(energyPenality);
+            }
+            else
+            {
+                player.GetComponent<playerController>().setEnergy(currEnergy - energyCost);
+            }
+            
             //machinegun path logic
             if (controller.getState("Machine Gun"))
             {
@@ -223,7 +248,7 @@ public class bulletWeapon : NetworkBehaviour
                 if (projectileCount % 2 == 1 && projectileCount != 1)
                 {
                     float temp = projectileCount + 2;
-                    float rotationAngle = (controller.getStat("Shot Spread") + (projectileCount * 0.1f)) / (temp-1);
+                    float rotationAngle = controller.getStat("Shot Spread") / (temp-1);
                     for (int i = 1; i < (temp - 1)/2; i++)
                     {
                         Vector3 posPoint = rotateVector(transform.right, rotationAngle * (i));
@@ -232,7 +257,7 @@ public class bulletWeapon : NetworkBehaviour
                         fireBulletServerRpc(
                             posPoint, 
                             gameObject.transform.position, 
-                            controller.getStat("Projectile Speed"),
+                            relativeBulletSpeed,
                             controller.getStat("Projectile Range"),
                             controller.getStat("Projectile Damage")
                         );
@@ -240,7 +265,7 @@ public class bulletWeapon : NetworkBehaviour
                         fireBulletServerRpc(
                             negPoint, 
                             gameObject.transform.position, 
-                            controller.getStat("Projectile Speed"),
+                            relativeBulletSpeed,
                             controller.getStat("Projectile Range"),
                             controller.getStat("Projectile Damage")
                         );
@@ -248,7 +273,7 @@ public class bulletWeapon : NetworkBehaviour
                         fireBulletServerRpc(
                             transform.right, 
                             gameObject.transform.position, 
-                            controller.getStat("Projectile Speed"),
+                            relativeBulletSpeed,
                             controller.getStat("Projectile Range"),
                             controller.getStat("Projectile Damage")
                         );
@@ -259,18 +284,18 @@ public class bulletWeapon : NetworkBehaviour
                 {
                     if (projectileCount > 2)
                     {
-                        Vector3 point1 = rotateVector(transform.right, (controller.getStat("Shot Spread") + (projectileCount * 0.1f))/2);
-                        float rotationAngle = (controller.getStat("Shot Spread") + (projectileCount * 0.1f)) / projectileCount;
-                        rotationAngle -= (rotationAngle / (int)projectileCount) + (controller.getStat("Shot Spread") / (int)projectileCount);
+                        Vector3 point1 = rotateVector(transform.right, (controller.getStat("Shot Spread"))/2);
+                        float rotationAngle = (controller.getStat("Shot Spread")) / projectileCount;
+                        rotationAngle -= rotationAngle / projectileCount;
                         float temp = projectileCount + 1;
                         for (int i = 1; i < temp; i++)
                         {
-                            Vector3 negPoint = rotateVector(point1, -rotationAngle * (2*i));
+                            Vector3 negPoint = rotateVector(point1, -rotationAngle * i);
 
                             fireBulletServerRpc(
                                 negPoint, 
                                 gameObject.transform.position, 
-                                controller.getStat("Projectile Speed"),
+                                relativeBulletSpeed,
                                 controller.getStat("Projectile Range"),
                                 controller.getStat("Projectile Damage")
                             );
@@ -285,7 +310,7 @@ public class bulletWeapon : NetworkBehaviour
                         fireBulletServerRpc(
                             posPoint, 
                             gameObject.transform.position, 
-                            controller.getStat("Projectile Speed"),
+                            relativeBulletSpeed,
                             controller.getStat("Projectile Range"),
                             controller.getStat("Projectile Damage")
                         );
@@ -293,7 +318,7 @@ public class bulletWeapon : NetworkBehaviour
                         fireBulletServerRpc(
                             negPoint, 
                             gameObject.transform.position, 
-                            controller.getStat("Projectile Speed"),
+                            relativeBulletSpeed,
                             controller.getStat("Projectile Range"),
                             controller.getStat("Projectile Damage")
                         );
@@ -306,16 +331,11 @@ public class bulletWeapon : NetworkBehaviour
                     fireBulletServerRpc(
                             transform.right, 
                             gameObject.transform.position, 
-                            controller.getStat("Projectile Speed"),
+                            relativeBulletSpeed,
                             controller.getStat("Projectile Range"),
                             controller.getStat("Projectile Damage")
                     );
                 }
-            }
-            //sniper path logic
-            else if (controller.getState("Sniper") && burstFlag == false)
-            {
-                burstFlag = true;
             }
             //shotgun path logic
             else if (controller.getState("Shotgun"))
@@ -329,7 +349,7 @@ public class bulletWeapon : NetworkBehaviour
                     fireBulletServerRpc(
                             fireVector, 
                             gameObject.transform.position, 
-                            controller.getStat("Projectile Speed"),
+                            relativeBulletSpeed,
                             controller.getStat("Projectile Range"),
                             controller.getStat("Projectile Damage")
                     );
@@ -343,7 +363,7 @@ public class bulletWeapon : NetworkBehaviour
                     fireBulletServerRpc(
                             fireVector, 
                             gameObject.transform.position, 
-                            controller.getStat("Projectile Speed") * 0.80f,
+                            relativeBulletSpeed * 0.80f,
                             controller.getStat("Projectile Range"),
                             controller.getStat("Projectile Damage")
                     );
@@ -357,14 +377,14 @@ public class bulletWeapon : NetworkBehaviour
                     fireBulletServerRpc(
                             fireVector, 
                             gameObject.transform.position, 
-                            controller.getStat("Projectile Speed") * 0.60f,
+                            relativeBulletSpeed * 0.60f,
                             controller.getStat("Projectile Range"),
                             controller.getStat("Projectile Damage")
                     );
                 }
             }
             //basic gun logic
-            else if (burstFlag == false && controller.getState("Shotgun") == false && controller.getState("Machine Gun") == false && controller.getState("Sniper") == false)
+            else if (controller.getState("Shotgun") == false && controller.getState("Machine Gun") == false && controller.getState("Sniper") == false)
             {
                 for (int i = 0; i < controller.getStat("Projectile Count"); i++)
                 {
@@ -376,7 +396,7 @@ public class bulletWeapon : NetworkBehaviour
                     fireBulletServerRpc(
                         fireVector, 
                         gameObject.transform.position, 
-                        controller.getStat("Projectile Speed"),
+                        relativeBulletSpeed,
                         controller.getStat("Projectile Range"),
                         controller.getStat("Projectile Damage")
                     );
@@ -397,23 +417,23 @@ public class bulletWeapon : NetworkBehaviour
 
     [ClientRpc]
     void createBulletClientRpc(Vector3 _direction, Vector3 _position, float _projectileSpeed, float _projectileRange, float _projectileDamage)
-    {
+    {  
+        float angle = Mathf.Atan2(_direction.y, _direction.x) * Mathf.Rad2Deg;
+        Quaternion rotation = Quaternion.AngleAxis(angle, transform.forward);
+
         GameObject bullet = null;
+        bullet = Instantiate(defaultBulletPref, _position, rotation);
+        bullet.GetComponent<Rigidbody2D>().AddForce(_direction * _projectileSpeed, ForceMode2D.Impulse);
+        bullet.GetComponent<bulletProjectiles>().setStats(_projectileRange, _projectileDamage);
+        
         if (IsOwner && IsServer == false)
         {
-            bullet = Instantiate(defaultBulletPref, _position, Quaternion.identity);
-            bullet.GetComponent<Rigidbody2D>().AddForce(_direction * _projectileSpeed, ForceMode2D.Impulse);
-            bullet.GetComponent<bulletProjectiles>().setStats(_projectileRange, _projectileDamage);
-
             bullet.tag = "friendlyBullet";
         }
         
         if (IsOwner == false && IsServer == false)
         {
-            bullet = Instantiate(defaultBulletPref, _position, Quaternion.identity);
-            bullet.GetComponent<Rigidbody2D>().AddForce(_direction * _projectileSpeed, ForceMode2D.Impulse);
-            bullet.GetComponent<bulletProjectiles>().setStats(_projectileRange, _projectileDamage);
-
+            bullet.GetComponent<SpriteRenderer>().color = new Color(1.0f, 0.25f, 0.25f);
             bullet.tag = "enemyBullet";
         }
 
@@ -492,40 +512,43 @@ public class bulletWeapon : NetworkBehaviour
     //handles burst logic per frame
     void burst()
     {
-        burstSumDeltaTime += Time.deltaTime;
-        float burstTiming = 1.0f / controller.getStat("Fire Rate");
+        float energyCost = (controller.getStat("Projectile Damage") * controller.getStat("Projectile Count") - (controller.getStat("Fire Rate") * 10));
+        float currEnergy = player.GetComponent<playerController>().getEnergy();
 
-        if (burstFlag && controller.getState("Sniper"))
+        if(currEnergy - energyCost < 0.0f)
         {
-            if (burstSumDeltaTime >= burstTiming && burstCount < controller.getStat("Projectile Count"))
-            {
-                fireBulletServerRpc(
-                            transform.right, 
-                            gameObject.transform.position, 
-                            controller.getStat("Projectile Speed"),
-                            controller.getStat("Projectile Range"),
-                            controller.getStat("Projectile Damage")
-                );
-
-                //reset sum delta
-                burstSumDeltaTime = 0.0f;
-                //increment burst count
-                burstCount++;
-            }
-            else if (burstCount >= controller.getStat("Projectile Count"))
-            {
-                //set burst count to zero
-                burstCount = 0.0f;
-                //set burst to false
-                burstFlag = false;
-            }
+            //penality for over use of energy (3 seconds)
+            float energyPenality = -3.0f * player.GetComponent<playerController>().getRechargeRate();
+            player.GetComponent<playerController>().setEnergy(energyPenality);
+        }
+        else
+        {
+            player.GetComponent<playerController>().setEnergy(currEnergy - energyCost);
         }
 
-        if (burstFlag == true)
+        float relativeBulletSpeed = controller.getStat("Projectile Speed") + player.GetComponent<playerController>().getVelocity();
+
+        //ratio of damage
+        float ratio = currEnergy / energyCost;
+        float damage = 0.0f;
+        if (ratio <= 1.0f)
         {
-            sumDeltaTime = 0.0f;
+            damage = ratio * controller.getStat("Projectile Damage") * controller.getStat("Projectile Count");
         }
-        
+        else 
+        {
+            damage = controller.getStat("Projectile Damage") * controller.getStat("Projectile Count");
+        }
+
+        Debug.Log("Sniper Damage: " + damage);
+
+        fireBulletServerRpc(
+                transform.right, 
+                gameObject.transform.position, 
+                relativeBulletSpeed,
+                controller.getStat("Projectile Range"),
+                damage
+        );
     }
     private Vector3 rotateVector(Vector3 vector, float angle)
     {
@@ -542,10 +565,6 @@ public class bulletWeapon : NetworkBehaviour
     public void upgradeStat(string _statName)
     {
         controller.increaseStat(_statName);
-    }
-    public void downgradeStat(string _statName)
-    {
-        controller.decreaseState(_statName);
     }
     public void setState(string _stateName)
     {

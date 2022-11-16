@@ -19,6 +19,7 @@ public class playerController : NetworkBehaviour
 
     private float money = 10000.0f;
     private float repairAmount = 1.0f; //hull repaired passively per second
+    private float rechargeRate = 10.0f;
 
     public GameObject UILogic;
     private GameObject canvas;
@@ -29,6 +30,8 @@ public class playerController : NetworkBehaviour
     private GameObject shipUpgradeUI;
     private GameObject spaceStationButton;
     private GameObject currencyUI;
+    private GameObject energyBar;
+    private GameObject levelUI;
 
     public List<GameObject> weaponRegistry = new List<GameObject>();
     private GameObject healthBar;
@@ -38,7 +41,12 @@ public class playerController : NetworkBehaviour
     private const float DEFAULT_MAX_HEALTH = 100;
     private float maxHealth = DEFAULT_MAX_HEALTH;
     public float health = DEFAULT_MAX_HEALTH;
-    // private NetworkVariable<float> currentHealth = new NetworkVariable<float>(DEFAULT_MAX_HEALTH);
+
+    // player energy for UI
+    private const float DEFAULT_MAX_ENERGY = 20.0f;
+    private float maxEnergy = DEFAULT_MAX_ENERGY;
+    public float energy = DEFAULT_MAX_ENERGY;
+    
     // player currency for round
     private NetworkVariable<float> credits = new NetworkVariable<float>();
 
@@ -69,7 +77,10 @@ public class playerController : NetworkBehaviour
             //Find health bar, give base health
             //healthBar = GameObject.Find("Health bar");
             healthBar = canvas.transform.Find("Health bar").gameObject;
-            healthBar.GetComponent<HealthBar>().SetMaxHealth(maxHealth);
+            healthBar.GetComponent<UIBar>().SetMaxValue(maxHealth);
+
+            energyBar = canvas.transform.Find("Energy Bar").gameObject;
+            energyBar.GetComponent<UIBar>().SetMaxValue(maxEnergy);
 
             //Set initial credits for round
             credits.Value = 0;
@@ -79,6 +90,8 @@ public class playerController : NetworkBehaviour
 
             //Find weapon object UI
             bulletUpgradeUI = canvas.transform.Find("BulletUpgradeUI").gameObject;
+
+            levelUI = canvas.transform.Find("Level").gameObject;
 
             bulletweaponObject.GetComponent<bulletWeapon>().setUpgradeUI(bulletUpgradeUI);
             bulletweaponObject.GetComponent<bulletWeapon>().setCanvas(canvas);  //Sets the canvas object to draw debug
@@ -122,6 +135,13 @@ public class playerController : NetworkBehaviour
             transform.Rotate(rotationDieOff * Time.deltaTime);
             rotationDieOff -= rotationDieOff * 0.50f * Time.deltaTime;
 
+            int shipLevel = UILogic.GetComponent<shipUpgrades>().getShipLevel();
+            int bulletWeaponLevel = bulletweaponObject.GetComponent<bulletWeapon>().getController().getWeaponLevel();
+
+            int totalLevel = shipLevel + bulletWeaponLevel;
+
+            levelUI.GetComponent<TMP_Text>().text = "Lv. " + totalLevel.ToString();
+
             if (Input.GetKey(KeyCode.W))
             {
                 //adding player speed, until max speed is reached
@@ -158,7 +178,13 @@ public class playerController : NetworkBehaviour
             currencyUI.GetComponent<TMP_Text>().text = money.ToString();
             repair();
 
-            healthBar.GetComponent<HealthBar>().SetHealth(health);
+            if (!Input.GetKey(KeyCode.Space))
+            {
+                recharge();
+            }
+            
+
+            healthBar.GetComponent<UIBar>().SetValue(health);
         }
     }
 
@@ -204,7 +230,7 @@ public class playerController : NetworkBehaviour
     {
         health -= damage;
 
-        healthBar.GetComponent<HealthBar>().SetHealth(health);
+        healthBar.GetComponent<UIBar>().SetValue(health);
 
         if (health <= 0)
         {
@@ -213,11 +239,6 @@ public class playerController : NetworkBehaviour
             ulong objectID = gameObject.transform.parent.gameObject.GetComponent<NetworkObject>().NetworkObjectId;
             despawnPlayerServerRpc(clientID, objectID);
         }
-    }
-
-    private void PickupCredits(int amount)
-    {
-        credits.Value += amount;
     }
 
     private void repair()
@@ -229,6 +250,19 @@ public class playerController : NetworkBehaviour
         else if (health + (repairAmount * Time.deltaTime) > maxHealth)
         {
             health = maxHealth;
+        }
+    }
+    private void recharge()
+    {
+        if (energy + (rechargeRate * Time.deltaTime) <= maxEnergy)
+        {
+            energy += rechargeRate * Time.deltaTime;
+            setEnergy(energy);
+        }
+        else if (energy + (rechargeRate * Time.deltaTime) <= maxEnergy)
+        {
+            energy = maxEnergy;
+            setEnergy(energy);
         }
     }
     private void disableWeapons()
@@ -274,26 +308,8 @@ public class playerController : NetworkBehaviour
     public void setMaxHealth(float _maxHealth)
     {
         maxHealth = _maxHealth;
-        healthBar.GetComponent<HealthBar>().SetMaxHealth(maxHealth);
-
-        if (_maxHealth <= 1000)
-        {    
-            GameObject UIMiddle = healthBar.transform.Find("Border").transform.Find("Middle").gameObject;
-            GameObject UIFront = healthBar.transform.Find("Border").transform.Find("Front").gameObject;
-            GameObject Fill = healthBar.transform.Find("Fill").gameObject;
-
-            float width = UIMiddle.GetComponent<RectTransform>().sizeDelta.x;
-            float height = UIMiddle.GetComponent<RectTransform>().sizeDelta.y;
-            Vector2 newWidth = new Vector2(width + 50.0f, height);
-            UIMiddle.GetComponent<RectTransform>().sizeDelta = newWidth;
-
-            Fill.GetComponent<RectTransform>().offsetMax += new Vector2(7.5f, Fill.GetComponent<RectTransform>().offsetMax.y);
-            Fill.GetComponent<RectTransform>().offsetMax = new Vector2(Fill.GetComponent<RectTransform>().offsetMax.x, 0.0f);
-
-            UIMiddle.transform.localPosition += new Vector3(3.5f, 0.0f, 0.0f);
-            UIFront.transform.localPosition += new Vector3(7.2f, 0.0f, 0.0f);
-        }
-
+        healthBar.GetComponent<UIBar>().SetMaxValue(maxHealth);
+        healthBar.GetComponent<UIBar>().increaseBar();
     }
     public float getMaxVelocity()
     {
@@ -302,6 +318,10 @@ public class playerController : NetworkBehaviour
     public void setMaxVelocity(float _maxVelocity)
     {
         maxVelocity = _maxVelocity;
+    }
+    public float getVelocity()
+    {
+        return velocity;
     }
     public float getAcceleration()
     {
@@ -318,6 +338,33 @@ public class playerController : NetworkBehaviour
     public void setRepair(float _repairAmount)
     {
         repairAmount = _repairAmount;
+    }
+    public void setEnergy(float _energy)
+    {
+        energy = _energy;
+        energyBar.GetComponent<UIBar>().SetValue(energy);
+    }
+    public float getEnergy()
+    {
+        return energy;
+    }
+    public float getMaxEnergy()
+    {
+        return maxEnergy;
+    }
+    public void setMaxEnergy(float _maxEnergy)
+    {
+        maxEnergy = _maxEnergy;
+        energyBar.GetComponent<UIBar>().SetMaxValue(maxEnergy);
+        energyBar.GetComponent<UIBar>().increaseBar();
+    }
+    public void setRechargeRate(float _recharge)
+    {
+        rechargeRate = _recharge;
+    }
+    public float getRechargeRate()
+    {
+        return rechargeRate;
     }
 
     //handles player despawn sync

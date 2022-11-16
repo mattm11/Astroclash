@@ -97,6 +97,7 @@ namespace Astroclash
         private Dictionary<string, float> weaponStateCosts = new Dictionary<string, float>();
         private Dictionary<string, bool> weaponStates = new Dictionary<string, bool>();
         private Dictionary<string, StateRequirement> stateRequirements = new Dictionary<string, StateRequirement>();
+        private Dictionary<string, GameObject> upgradeCounters = new Dictionary<string, GameObject>();
         
 
         private WeaponDebugUI debugUI = null;
@@ -105,8 +106,10 @@ namespace Astroclash
         private GameObject upgradeUI = null;
         private GameObject canvas = null;
         private GameObject player = null;
+        private GameObject levelUI = null;
 
         private string stateSet = null;
+        private int weaponLevel = 0;
 
         public WeaponController (List<float> _stats, List<float> _increments, List<string> _statsName, List<bool> _states, List<string> _stateNames)
         {
@@ -167,26 +170,18 @@ namespace Astroclash
                 }
                 debugUI.setDebugValues(currStats);
                 checkStates();
+
+                int currCount = int.Parse(upgradeCounters[_statName].GetComponentInChildren<TMP_Text>().text);
+                currCount++;
+                upgradeCounters[_statName].GetComponentInChildren<TMP_Text>().text = currCount.ToString();
+                increaseLevel();
             }
             else 
             {
                 Debug.Log("Not enough money!");
             }
         }
-        public void decreaseState(string _statName)
-        {
-            weaponStats[_statName] -= weaponIncrements[_statName];
-
-            //update debug block
-            List<float> currStats = new List<float>();
-            for (int i = 0; i < weaponStatsNames.Count; i++)
-            {
-                currStats.Add(weaponStats[weaponStatsNames[i]]);
-            }
-            debugUI.setDebugValues(currStats);
-            checkStates();
-        }
-
+        
         //state requirement functions
         public void registerStateCosts(List<float> _costs)
         {
@@ -298,6 +293,25 @@ namespace Astroclash
         {
             canvas = _canvas;
         }
+        public void registerUpgradeCounters()
+        {
+            GameObject UpgradeCounter = upgradeUI.transform.Find("Upgrade Counter").gameObject;
+            levelUI = UpgradeCounter.transform.Find("Level").gameObject;
+
+            for (int i = 0; i < stats.Count; i++)
+            {
+                Transform module = UpgradeCounter.transform.Find(weaponStatsNames[i]);
+                if (module != null)
+                {
+                    upgradeCounters.Add(weaponStatsNames[i], module.gameObject);
+                }
+                else
+                {
+                    Debug.Log("There was no upgrade counter for stat: " + weaponStatsNames[i]);
+                } 
+            }
+
+        }
         public void enableButton(GameObject _button)
         {
             Image image = _button.GetComponent<Image>();
@@ -344,6 +358,10 @@ namespace Astroclash
         {
             bullet = _prefab;
         }
+        public GameObject getBulletPrefab()
+        {
+            return bullet;
+        }
         public float getStat(string _statName)
         {
             return weaponStats[_statName];
@@ -355,6 +373,15 @@ namespace Astroclash
         public bool getState(string _stateName)
         {
             return weaponStates[_stateName];
+        }
+        public int getWeaponLevel()
+        {
+            return weaponLevel;
+        }
+        private void increaseLevel()
+        {
+            weaponLevel++;
+            levelUI.GetComponent<TMP_Text>().text = "Lv. " + weaponLevel.ToString();
         }
         public List<string> getStatNames()
         {
