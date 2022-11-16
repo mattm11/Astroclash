@@ -31,6 +31,7 @@ public class playerController : NetworkBehaviour
     private GameObject spaceStationButton;
     private GameObject currencyUI;
     private GameObject energyBar;
+    private GameObject levelUI;
 
     public List<GameObject> weaponRegistry = new List<GameObject>();
     private GameObject healthBar;
@@ -90,6 +91,8 @@ public class playerController : NetworkBehaviour
             //Find weapon object UI
             bulletUpgradeUI = canvas.transform.Find("BulletUpgradeUI").gameObject;
 
+            levelUI = canvas.transform.Find("Level").gameObject;
+
             bulletweaponObject.GetComponent<bulletWeapon>().setUpgradeUI(bulletUpgradeUI);
             bulletweaponObject.GetComponent<bulletWeapon>().setCanvas(canvas);  //Sets the canvas object to draw debug
 
@@ -131,6 +134,13 @@ public class playerController : NetworkBehaviour
             transform.position += new Vector3(velocity * (float)Math.Cos(angle), velocity * (float)Math.Sin(angle), 0) * Time.deltaTime;
             transform.Rotate(rotationDieOff * Time.deltaTime);
             rotationDieOff -= rotationDieOff * 0.50f * Time.deltaTime;
+
+            int shipLevel = UILogic.GetComponent<shipUpgrades>().getShipLevel();
+            int bulletWeaponLevel = bulletweaponObject.GetComponent<bulletWeapon>().getController().getWeaponLevel();
+
+            int totalLevel = shipLevel + bulletWeaponLevel;
+
+            levelUI.GetComponent<TMP_Text>().text = "Lv. " + totalLevel.ToString();
 
             if (Input.GetKey(KeyCode.W))
             {
@@ -308,6 +318,10 @@ public class playerController : NetworkBehaviour
     public void setMaxVelocity(float _maxVelocity)
     {
         maxVelocity = _maxVelocity;
+    }
+    public float getVelocity()
+    {
+        return velocity;
     }
     public float getAcceleration()
     {

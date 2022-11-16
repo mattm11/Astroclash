@@ -1,15 +1,19 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using TMPro;
 
 public class shipUpgrades : MonoBehaviour
 {
     private GameObject player;
+    public GameObject levelUI;
     private float hullUpgradeCost = 100.0f;
     private float speedUpgradeCost = 100.0f;
     private float repairUpgradeCost = 100.0f;
     private float capactiyUpgradeCost = 100.0f;
     private float rechargeUpgradeCost = 100.0f;
+
+    private int shipLevel = 0;
 
 
     void Start()
@@ -42,6 +46,7 @@ public class shipUpgrades : MonoBehaviour
             player.GetComponent<playerController>().subtractCurrency(hullUpgradeCost);
         }
         
+        increaseLevel();
     }
 
     public void upgradeSpeed(float _speedIncrement)
@@ -56,6 +61,8 @@ public class shipUpgrades : MonoBehaviour
 
             player.GetComponent<playerController>().subtractCurrency(speedUpgradeCost);
         }
+
+        increaseLevel();
     }
 
     public void upgradeRepair(float _repairIncrement)
@@ -67,6 +74,8 @@ public class shipUpgrades : MonoBehaviour
 
             player.GetComponent<playerController>().subtractCurrency(repairUpgradeCost);
         }
+
+        increaseLevel();
     }
 
     public void upgradeEnergyCapacity(float _energyCapacityIncrement)
@@ -79,6 +88,8 @@ public class shipUpgrades : MonoBehaviour
 
             player.GetComponent<playerController>().subtractCurrency(capactiyUpgradeCost);
         }
+
+        increaseLevel();
     }
 
     public void upgradeRecharge(float _rechargeIncrement)
@@ -90,5 +101,18 @@ public class shipUpgrades : MonoBehaviour
 
             player.GetComponent<playerController>().subtractCurrency(rechargeUpgradeCost);
         }
+
+        increaseLevel();
+    }
+
+    public int getShipLevel()
+    {
+        return shipLevel;
+    }
+
+    private void increaseLevel()
+    {
+        shipLevel++;
+        levelUI.GetComponent<TMP_Text>().text = "Lv. " + shipLevel.ToString();
     }
 }
