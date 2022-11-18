@@ -12,14 +12,14 @@ public class titleScripts : MonoBehaviour
         Application.Quit();
     }
 
-    public void start()
+    public void changeScene(string _sceneName)
     {
-        Debug.Log("Starting the game...");
+        Debug.Log("Loading Scene: " + _sceneName);
 
         if (input.text == "")
             playerController.playerName = "Anonymous";
         else
             playerController.playerName = input.text;
-        SceneManager.LoadScene("Network Scene Final");
+        SceneManager.LoadScene(_sceneName);
     }
 }

@@ -11,15 +11,16 @@ public class playerController : NetworkBehaviour
 {
 
     //acceleration amount per second added to velocity. de-acceleration is 2:1 proportional to acceleration
-    public float acceleration = 1.0f;
+    private float acceleration = 1.0f;
     //maximum speed of player ship
-    public float maxVelocity = 3.0f;
-    public float velocity = 0.0f;
+    private float maxVelocity = 3.0f;
+    private float velocity = 0.0f;
     private Vector3 rotationDieOff = new Vector3(0.0f, 0.0f, 0.0f);
+    private int debrisAmount = 3;
 
-    public float money = 0.0f;
-    public float health = 100.0f;
-    public float repairAmount = 1.0f; //hull repaired passively per second
+    private float money = 10000.0f;
+    private float repairAmount = 1.0f; //hull repaired passively per second
+    private float rechargeRate = 10.0f;
 
     public GameObject UILogic;
     private GameObject canvas;
@@ -30,6 +31,8 @@ public class playerController : NetworkBehaviour
     private GameObject shipUpgradeUI;
     private GameObject spaceStationButton;
     private GameObject currencyUI;
+    private GameObject energyBar;
+    private GameObject levelUI;
 
     public List<GameObject> weaponRegistry = new List<GameObject>();
     private GameObject healthBar;
@@ -42,7 +45,13 @@ public class playerController : NetworkBehaviour
 
     private const float DEFAULT_MAX_HEALTH = 100;
     private float maxHealth = DEFAULT_MAX_HEALTH;
-    private NetworkVariable<float> currentHealth = new NetworkVariable<float>(DEFAULT_MAX_HEALTH);
+    public float health = DEFAULT_MAX_HEALTH;
+
+    // player energy for UI
+    private const float DEFAULT_MAX_ENERGY = 20.0f;
+    private float maxEnergy = DEFAULT_MAX_ENERGY;
+    public float energy = DEFAULT_MAX_ENERGY;
+
     // player currency for round
     private NetworkVariable<float> credits = new NetworkVariable<float>();
 
@@ -61,7 +70,7 @@ public class playerController : NetworkBehaviour
         setNameServerRpc(playerName);
         // Find health plate and nameplate
         healthPlate = UIplates.transform.Find("Health bar").gameObject;
-        healthPlate.GetComponent<HealthBar>().SetMaxHealth(maxHealth);
+        healthPlate.GetComponent<UIBar>().SetMaxHealth(maxHealth);
 
         if (IsOwner)
         {
@@ -88,7 +97,10 @@ public class playerController : NetworkBehaviour
             //Find health bar, give base health
             //healthBar = GameObject.Find("Health bar");
             healthBar = canvas.transform.Find("Health bar").gameObject;
-            healthBar.GetComponent<HealthBar>().SetMaxHealth(maxHealth);
+            healthBar.GetComponent<UIBar>().SetMaxValue(maxHealth);
+
+            energyBar = canvas.transform.Find("Energy Bar").gameObject;
+            energyBar.GetComponent<UIBar>().SetMaxValue(maxEnergy);
 
             //Set initial credits for round
             credits.Value = 0;
@@ -98,6 +110,8 @@ public class playerController : NetworkBehaviour
 
             //Find weapon object UI
             bulletUpgradeUI = canvas.transform.Find("BulletUpgradeUI").gameObject;
+
+            levelUI = canvas.transform.Find("Level").gameObject;
 
             bulletweaponObject.GetComponent<bulletWeapon>().setUpgradeUI(bulletUpgradeUI);
             bulletweaponObject.GetComponent<bulletWeapon>().setCanvas(canvas);  //Sets the canvas object to draw debug
@@ -118,8 +132,8 @@ public class playerController : NetworkBehaviour
         // Remove other non-client player's UI elements and event system
         else
         {
-            GameObject.Destroy(gameObject.transform.Find("Canvas").gameObject);
-            GameObject.Destroy(gameObject.transform.Find("EventSystem").gameObject);
+            gameObject.transform.Find("Canvas").gameObject.SetActive(false);
+            gameObject.transform.Find("EventSystem").gameObject.SetActive(false);
         }
 
     }
@@ -147,6 +161,13 @@ public class playerController : NetworkBehaviour
             transform.position += new Vector3(velocity * (float)Math.Cos(angle), velocity * (float)Math.Sin(angle), 0) * Time.deltaTime;
             transform.Rotate(rotationDieOff * Time.deltaTime);
             rotationDieOff -= rotationDieOff * 0.50f * Time.deltaTime;
+
+            int shipLevel = UILogic.GetComponent<shipUpgrades>().getShipLevel();
+            int bulletWeaponLevel = bulletweaponObject.GetComponent<bulletWeapon>().getController().getWeaponLevel();
+
+            int totalLevel = shipLevel + bulletWeaponLevel;
+
+            levelUI.GetComponent<TMP_Text>().text = "Lv. " + totalLevel.ToString();
 
             if (Input.GetKey(KeyCode.W))
             {
@@ -184,10 +205,13 @@ public class playerController : NetworkBehaviour
             currencyUI.GetComponent<TMP_Text>().text = money.ToString();
             repair();
 
-            if (Input.GetKeyDown(KeyCode.Space))
+            if (!Input.GetKey(KeyCode.Space))
             {
-                TakeDamage(20);
+                recharge();
             }
+
+
+            healthBar.GetComponent<UIBar>().SetValue(health);
         }
     }
 
@@ -222,41 +246,53 @@ public class playerController : NetworkBehaviour
         if (IsOwner)
         {
             if (collider.gameObject.name == "Space Station")
+            {
                 UILogic.GetComponent<UIRegistrar>().disableAll();
-            enableWeapons();
+                enableWeapons();
+            }
         }
-
     }
 
     private void TakeDamage(float damage)
     {
-        currentHealth.Value -= damage;
+        health -= damage;
 
-        healthBar.GetComponent<HealthBar>().SetHealth(currentHealth.Value);
-        healthPlate.GetComponent<HealthBar>().SetHealth(currentHealth.Value);
+        healthBar.GetComponent<UIBar>().SetValue(health);
+        healthPlate.GetComponent<UIBar>().SetValue(health);
 
-        if (currentHealth.Value <= 0)
+        if (health <= 0)
         {
             SceneManager.LoadScene("DeathScreen");
-            NetworkObject.Despawn(gameObject.transform.parent.gameObject);
+            spawnDebrisServerRpc(gameObject.transform.position);
+            ulong clientID = gameObject.transform.parent.gameObject.GetComponent<NetworkObject>().OwnerClientId;
+            ulong objectID = gameObject.transform.parent.gameObject.GetComponent<NetworkObject>().NetworkObjectId;
+            despawnPlayerServerRpc(clientID, objectID);
         }
 
-    }
-
-    private void PickupCredits(int amount)
-    {
-        credits.Value += amount;
     }
 
     private void repair()
     {
-        if (currentHealth.Value + (repairAmount * Time.deltaTime) <= maxHealth)
+        if (health + (repairAmount * Time.deltaTime) <= maxHealth)
         {
-            currentHealth.Value += repairAmount * Time.deltaTime;
+            health += repairAmount * Time.deltaTime;
         }
-        else if (currentHealth.Value + (repairAmount * Time.deltaTime) > maxHealth)
+        else if (health + (repairAmount * Time.deltaTime) > maxHealth)
         {
-            currentHealth.Value = maxHealth;
+            health = maxHealth;
+        }
+    }
+    private void recharge()
+    {
+        if (energy + (rechargeRate * Time.deltaTime) <= maxEnergy)
+        {
+            energy += rechargeRate * Time.deltaTime;
+            setEnergy(energy);
+        }
+        else if (energy + (rechargeRate * Time.deltaTime) <= maxEnergy)
+        {
+            energy = maxEnergy;
+            setEnergy(energy);
         }
     }
     private void disableWeapons()
@@ -297,16 +333,13 @@ public class playerController : NetworkBehaviour
     }
     public void setHealth(float _health)
     {
-        currentHealth.Value = _health;
+        health = _health;
     }
-    // Upgrade function for health
     public void setMaxHealth(float _maxHealth)
     {
         maxHealth = _maxHealth;
-        healthBar.GetComponent<HealthBar>().SetMaxHealth(maxHealth);
-
-        healthBar.GetComponent<HealthBar>().transform.localScale += new Vector3(0.2f, 0.0f, 0.0f);
-        healthBar.GetComponent<RectTransform>().localPosition += new Vector3(30.0f, 0.0f, 0.0f);
+        healthBar.GetComponent<UIBar>().SetMaxValue(maxHealth);
+        healthBar.GetComponent<UIBar>().increaseBar();
     }
     public float getMaxVelocity()
     {
@@ -315,6 +348,10 @@ public class playerController : NetworkBehaviour
     public void setMaxVelocity(float _maxVelocity)
     {
         maxVelocity = _maxVelocity;
+    }
+    public float getVelocity()
+    {
+        return velocity;
     }
     public float getAcceleration()
     {
@@ -336,5 +373,68 @@ public class playerController : NetworkBehaviour
     public void setNameServerRpc(string name)
     {
         networkName.Value = name;
+        public void setEnergy(float _energy)
+        {
+            energy = _energy;
+            energyBar.GetComponent<UIBar>().SetValue(energy);
+        }
+        public float getEnergy()
+        {
+            return energy;
+        }
+        public float getMaxEnergy()
+        {
+            return maxEnergy;
+        }
+        public void setMaxEnergy(float _maxEnergy)
+        {
+            maxEnergy = _maxEnergy;
+            energyBar.GetComponent<UIBar>().SetMaxValue(maxEnergy);
+            energyBar.GetComponent<UIBar>().increaseBar();
+        }
+        public void setRechargeRate(float _recharge)
+        {
+            rechargeRate = _recharge;
+        }
+        public float getRechargeRate()
+        {
+            return rechargeRate;
+        }
+
+        //handles player despawn sync
+        [ServerRpc]
+        private void spawnDebrisServerRpc(Vector3 _position)
+        {
+            spawnDebrisClientRpc(_position);
+        }
+        [ServerRpc]
+        private void despawnPlayerServerRpc(ulong _clientID, ulong _objectID)
+        {
+            ClientRpcParams clientRpcParams = new ClientRpcParams
+            {
+                Send = new ClientRpcSendParams
+                {
+                    TargetClientIds = new ulong[] { _clientID }
+                }
+            };
+            loadDeathSceneClientRpc(clientRpcParams);
+            GameObject.FindGameObjectWithTag("Spawn Manager").GetComponent<SpawnManager>().despawnEntity(_objectID);
+        }
+        [ClientRpc]
+        private void spawnDebrisClientRpc(Vector3 _position)
+        {
+            UnityEngine.Object debris = Resources.Load("prefabs/Debris");
+            for (int i = 0; i < debrisAmount; i++)
+            {
+                Instantiate(debris, _position, Quaternion.identity);
+            }
+        }
+        [ClientRpc]
+        private void loadDeathSceneClientRpc(ClientRpcParams clientRpcParams = default)
+        {
+            NetworkManager.Singleton.Shutdown();
+            // SceneManager.LoadScene("DeathScreen");
+            SceneManager.LoadScene("EvanDeathScreen");
+            GameObject.Destroy(GameObject.Find("Network Manager"));
+        }
     }
-}

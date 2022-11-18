@@ -8,6 +8,7 @@ TagManager:
   - UIModule
   - friendlyBullet
   - enemyBullet
+  - Spawn Manager
   layers:
   - Default
   - TransparentFX

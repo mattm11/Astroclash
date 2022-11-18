@@ -11,7 +11,8 @@ public class UIToggle : MonoBehaviour
     }
     public void toggleOn(GameObject targetUI)
     {
-        for (int i = 3; i < UILogic.GetComponent<UIRegistrar>().getElementCount(); i++)
+        //starting index should be before any persistant UI that is within the registrar
+        for (int i = 2; i < UILogic.GetComponent<UIRegistrar>().getElementCount(); i++)
         {
             UILogic.GetComponent<UIRegistrar>().disableIndex(i);
         }

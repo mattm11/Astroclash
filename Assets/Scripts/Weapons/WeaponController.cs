@@ -34,7 +34,7 @@ namespace Astroclash
 
                 for (int i = 0; i < _stats.Count; i++)
                 {
-                    GameObject module = (GameObject)Instantiate(prefab, new Vector3(30, i * -30 + -30 + 500, 0), Quaternion.identity);
+                    GameObject module = (GameObject)Instantiate(prefab, new Vector3(30, i * -30, 0), Quaternion.identity);
                     module.SetActive(false);
                     module.transform.parent = canvas.gameObject.transform;
                     module.tag = "UIModule";
@@ -97,6 +97,7 @@ namespace Astroclash
         private Dictionary<string, float> weaponStateCosts = new Dictionary<string, float>();
         private Dictionary<string, bool> weaponStates = new Dictionary<string, bool>();
         private Dictionary<string, StateRequirement> stateRequirements = new Dictionary<string, StateRequirement>();
+        private Dictionary<string, GameObject> upgradeCounters = new Dictionary<string, GameObject>();
         
 
         private WeaponDebugUI debugUI = null;
@@ -105,8 +106,10 @@ namespace Astroclash
         private GameObject upgradeUI = null;
         private GameObject canvas = null;
         private GameObject player = null;
+        private GameObject levelUI = null;
 
         private string stateSet = null;
+        private int weaponLevel = 0;
 
         public WeaponController (List<float> _stats, List<float> _increments, List<string> _statsName, List<bool> _states, List<string> _stateNames)
         {
@@ -115,6 +118,14 @@ namespace Astroclash
             weaponStatsNames = _statsName;
             stateNames = _stateNames;
             states = _states;
+
+            //clear in case of previous game memory conflicts
+            weaponIncrements.Clear();
+            weaponStats.Clear();
+            weaponStatCosts.Clear();
+            weaponStateCosts.Clear();
+            weaponStates.Clear();
+            stateRequirements.Clear();
 
             for (int i = 0; i < stats.Count; i++)
             {
@@ -159,26 +170,18 @@ namespace Astroclash
                 }
                 debugUI.setDebugValues(currStats);
                 checkStates();
+
+                int currCount = int.Parse(upgradeCounters[_statName].GetComponentInChildren<TMP_Text>().text);
+                currCount++;
+                upgradeCounters[_statName].GetComponentInChildren<TMP_Text>().text = currCount.ToString();
+                increaseLevel();
             }
             else 
             {
                 Debug.Log("Not enough money!");
             }
         }
-        public void decreaseState(string _statName)
-        {
-            weaponStats[_statName] -= weaponIncrements[_statName];
-
-            //update debug block
-            List<float> currStats = new List<float>();
-            for (int i = 0; i < weaponStatsNames.Count; i++)
-            {
-                currStats.Add(weaponStats[weaponStatsNames[i]]);
-            }
-            debugUI.setDebugValues(currStats);
-            checkStates();
-        }
-
+        
         //state requirement functions
         public void registerStateCosts(List<float> _costs)
         {
@@ -290,6 +293,25 @@ namespace Astroclash
         {
             canvas = _canvas;
         }
+        public void registerUpgradeCounters()
+        {
+            GameObject UpgradeCounter = upgradeUI.transform.Find("Upgrade Counter").gameObject;
+            levelUI = UpgradeCounter.transform.Find("Level").gameObject;
+
+            for (int i = 0; i < stats.Count; i++)
+            {
+                Transform module = UpgradeCounter.transform.Find(weaponStatsNames[i]);
+                if (module != null)
+                {
+                    upgradeCounters.Add(weaponStatsNames[i], module.gameObject);
+                }
+                else
+                {
+                    Debug.Log("There was no upgrade counter for stat: " + weaponStatsNames[i]);
+                } 
+            }
+
+        }
         public void enableButton(GameObject _button)
         {
             Image image = _button.GetComponent<Image>();
@@ -336,13 +358,30 @@ namespace Astroclash
         {
             bullet = _prefab;
         }
+        public GameObject getBulletPrefab()
+        {
+            return bullet;
+        }
         public float getStat(string _statName)
         {
             return weaponStats[_statName];
         }
+        public void setStatIncrement(string _statName, float _increment)
+        {
+            weaponIncrements[_statName] = _increment;
+        }
         public bool getState(string _stateName)
         {
             return weaponStates[_stateName];
+        }
+        public int getWeaponLevel()
+        {
+            return weaponLevel;
+        }
+        private void increaseLevel()
+        {
+            weaponLevel++;
+            levelUI.GetComponent<TMP_Text>().text = "Lv. " + weaponLevel.ToString();
         }
         public List<string> getStatNames()
         {
@@ -373,6 +412,17 @@ namespace Astroclash
                 {
                     GameObject statUIElement = upgradeUI.transform.Find(weaponStatsNames[i]).gameObject;
                     statUIElement.AddComponent<Button>();
+
+                    ColorBlock buttonColor = new ColorBlock();
+                    buttonColor.normalColor = Color.white;
+                    buttonColor.highlightedColor = new Color(0.5f, 1.0f, 0.5f);
+                    buttonColor.pressedColor = Color.green;
+                    buttonColor.selectedColor = Color.white;
+                    buttonColor.disabledColor = Color.grey;
+                    buttonColor.colorMultiplier = 1.0f;
+                    buttonColor.fadeDuration = 0.1f;
+
+                    statUIElement.GetComponent<Button>().colors = buttonColor;
                     string name = weaponStatsNames[i];
                     statUIElement.GetComponent<Button>().onClick.AddListener(() => increaseStat(name));
                     statUIObjects.Add(statUIElement);
@@ -392,6 +442,18 @@ namespace Astroclash
                 string state = stateNames[i];
                 stateUIElement.GetComponent<Button>().onClick.AddListener(() => setState(state));
                 stateUIElement.GetComponent<Button>().enabled = false;
+
+                ColorBlock buttonColor = new ColorBlock();
+                buttonColor.normalColor = Color.white;
+                buttonColor.highlightedColor = new Color(0.5f, 1.0f, 0.5f);
+                buttonColor.pressedColor = Color.green;
+                buttonColor.selectedColor = Color.white;
+                buttonColor.disabledColor = Color.grey;
+                buttonColor.colorMultiplier = 1.0f;
+                buttonColor.fadeDuration = 0.1f;
+
+                stateUIElement.GetComponent<Button>().colors = buttonColor;
+
                 stateUIObjects.Add(stateUIElement);
             }
         }
