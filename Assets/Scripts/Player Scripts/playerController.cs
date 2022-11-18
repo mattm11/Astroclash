@@ -5,6 +5,7 @@ using Unity.Netcode;
 using System;
 using UnityEngine.SceneManagement;
 using TMPro;
+using Unity.Collections;
 
 public class playerController : NetworkBehaviour
 {
@@ -33,25 +34,41 @@ public class playerController : NetworkBehaviour
     public List<GameObject> weaponRegistry = new List<GameObject>();
     private GameObject healthBar;
 
+    private GameObject UIplates;
+    private GameObject healthPlate;
+    private GameObject namePlate;
+
     // player health for UI
-    
+
     private const float DEFAULT_MAX_HEALTH = 100;
     private float maxHealth = DEFAULT_MAX_HEALTH;
     private NetworkVariable<float> currentHealth = new NetworkVariable<float>(DEFAULT_MAX_HEALTH);
     // player currency for round
     private NetworkVariable<float> credits = new NetworkVariable<float>();
 
-    private Camera playerCamera;
+    public Camera playerCamera;
+    public static string playerName;
+    public NetworkVariable<FixedString64Bytes> networkName = new NetworkVariable<FixedString64Bytes>();
 
     void Start()
     {
         // bullet and player collision ignore
         Physics2D.IgnoreLayerCollision(6, 7);
 
+        UIplates = gameObject.transform.parent.transform.Find("UI Plates").gameObject;
+        // Find nameplate, give name
+        namePlate = UIplates.transform.Find("Nameplate").gameObject;
+        setNameServerRpc(playerName);
+        // Find health plate and nameplate
+        healthPlate = UIplates.transform.Find("Health bar").gameObject;
+        healthPlate.GetComponent<HealthBar>().SetMaxHealth(maxHealth);
+
         if (IsOwner)
         {
             GameObject parent = gameObject.transform.parent.gameObject;
             playerCamera = parent.GetComponentInChildren<Camera>();
+            if (playerCamera == null)
+                Debug.Log("Player camera is null!");
 
             //Find canvas/event system
             canvas = gameObject.transform.Find("Canvas").gameObject;
@@ -110,6 +127,10 @@ public class playerController : NetworkBehaviour
     // Update is called once per frame
     void Update()
     {
+        namePlate.GetComponent<TMP_Text>().text = networkName.Value.ToString();
+        // update UI plates to follow camera
+        UIplates.transform.position = gameObject.transform.position;
+
         if (IsOwner)
         {
             //update the camera origin
@@ -117,6 +138,9 @@ public class playerController : NetworkBehaviour
             newPosition.x = gameObject.transform.position.x;
             newPosition.y = gameObject.transform.position.y;
             playerCamera.transform.position = newPosition;
+
+
+
 
             //Movement is broken down into: X = Movement_Speed * cos(rotation_angle) Y = Movement_Speed * sin(rotation_angle)
             float angle = (float)(transform.eulerAngles.z * (Math.PI / 180));
@@ -164,7 +188,6 @@ public class playerController : NetworkBehaviour
             {
                 TakeDamage(20);
             }
-            healthBar.GetComponent<HealthBar>().SetHealth(currentHealth.Value);
         }
     }
 
@@ -210,11 +233,14 @@ public class playerController : NetworkBehaviour
         currentHealth.Value -= damage;
 
         healthBar.GetComponent<HealthBar>().SetHealth(currentHealth.Value);
+        healthPlate.GetComponent<HealthBar>().SetHealth(currentHealth.Value);
 
         if (currentHealth.Value <= 0)
         {
             SceneManager.LoadScene("DeathScreen");
+            NetworkObject.Despawn(gameObject.transform.parent.gameObject);
         }
+
     }
 
     private void PickupCredits(int amount)
@@ -305,5 +331,10 @@ public class playerController : NetworkBehaviour
     public void setRepair(float _repairAmount)
     {
         repairAmount = _repairAmount;
+    }
+    [ServerRpc]
+    public void setNameServerRpc(string name)
+    {
+        networkName.Value = name;
     }
 }

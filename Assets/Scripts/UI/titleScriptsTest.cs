@@ -2,7 +2,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using TMPro;
 
-public class titleScripts : MonoBehaviour
+public class titleScriptsTest : MonoBehaviour
 {
     public TMP_InputField input;
 
@@ -20,6 +20,6 @@ public class titleScripts : MonoBehaviour
             playerController.playerName = "Anonymous";
         else
             playerController.playerName = input.text;
-        SceneManager.LoadScene("Network Scene Final");
+        SceneManager.LoadScene("Network Sandbox");
     }
 }
