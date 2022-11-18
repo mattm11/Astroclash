@@ -70,7 +70,7 @@ public class playerController : NetworkBehaviour
         setNameServerRpc(playerName);
         // Find health plate and nameplate
         healthPlate = UIplates.transform.Find("Health bar").gameObject;
-        healthPlate.GetComponent<UIBar>().SetMaxHealth(maxHealth);
+        healthPlate.GetComponent<UIBar>().SetValue(maxHealth);
 
         if (IsOwner)
         {
@@ -373,68 +373,69 @@ public class playerController : NetworkBehaviour
     public void setNameServerRpc(string name)
     {
         networkName.Value = name;
-        public void setEnergy(float _energy)
-        {
-            energy = _energy;
-            energyBar.GetComponent<UIBar>().SetValue(energy);
-        }
-        public float getEnergy()
-        {
-            return energy;
-        }
-        public float getMaxEnergy()
-        {
-            return maxEnergy;
-        }
-        public void setMaxEnergy(float _maxEnergy)
-        {
-            maxEnergy = _maxEnergy;
-            energyBar.GetComponent<UIBar>().SetMaxValue(maxEnergy);
-            energyBar.GetComponent<UIBar>().increaseBar();
-        }
-        public void setRechargeRate(float _recharge)
-        {
-            rechargeRate = _recharge;
-        }
-        public float getRechargeRate()
-        {
-            return rechargeRate;
-        }
+    }
+    public void setEnergy(float _energy)
+    {
+        energy = _energy;
+        energyBar.GetComponent<UIBar>().SetValue(energy);
+    }
+    public float getEnergy()
+    {
+        return energy;
+    }
+    public float getMaxEnergy()
+    {
+        return maxEnergy;
+    }
+    public void setMaxEnergy(float _maxEnergy)
+    {
+        maxEnergy = _maxEnergy;
+        energyBar.GetComponent<UIBar>().SetMaxValue(maxEnergy);
+        energyBar.GetComponent<UIBar>().increaseBar();
+    }
+    public void setRechargeRate(float _recharge)
+    {
+        rechargeRate = _recharge;
+    }
+    public float getRechargeRate()
+    {
+        return rechargeRate;
+    }
 
-        //handles player despawn sync
-        [ServerRpc]
-        private void spawnDebrisServerRpc(Vector3 _position)
+    //handles player despawn sync
+    [ServerRpc]
+    private void spawnDebrisServerRpc(Vector3 _position)
+    {
+        spawnDebrisClientRpc(_position);
+    }
+    [ServerRpc]
+    private void despawnPlayerServerRpc(ulong _clientID, ulong _objectID)
+    {
+        ClientRpcParams clientRpcParams = new ClientRpcParams
         {
-            spawnDebrisClientRpc(_position);
-        }
-        [ServerRpc]
-        private void despawnPlayerServerRpc(ulong _clientID, ulong _objectID)
-        {
-            ClientRpcParams clientRpcParams = new ClientRpcParams
+            Send = new ClientRpcSendParams
             {
-                Send = new ClientRpcSendParams
-                {
-                    TargetClientIds = new ulong[] { _clientID }
-                }
-            };
-            loadDeathSceneClientRpc(clientRpcParams);
-            GameObject.FindGameObjectWithTag("Spawn Manager").GetComponent<SpawnManager>().despawnEntity(_objectID);
-        }
-        [ClientRpc]
-        private void spawnDebrisClientRpc(Vector3 _position)
-        {
-            UnityEngine.Object debris = Resources.Load("prefabs/Debris");
-            for (int i = 0; i < debrisAmount; i++)
-            {
-                Instantiate(debris, _position, Quaternion.identity);
+                TargetClientIds = new ulong[] { _clientID }
             }
-        }
-        [ClientRpc]
-        private void loadDeathSceneClientRpc(ClientRpcParams clientRpcParams = default)
+        };
+        loadDeathSceneClientRpc(clientRpcParams);
+        GameObject.FindGameObjectWithTag("Spawn Manager").GetComponent<SpawnManager>().despawnEntity(_objectID);
+    }
+    [ClientRpc]
+    private void spawnDebrisClientRpc(Vector3 _position)
+    {
+        UnityEngine.Object debris = Resources.Load("prefabs/Debris");
+        for (int i = 0; i < debrisAmount; i++)
         {
-            NetworkManager.Singleton.Shutdown();
-            // SceneManager.LoadScene("DeathScreen");
-            SceneManager.LoadScene("EvanDeathScreen");
-            GameObject.Destroy(GameObject.Find("Network Manager"));
+            Instantiate(debris, _position, Quaternion.identity);
         }
     }
+    [ClientRpc]
+    private void loadDeathSceneClientRpc(ClientRpcParams clientRpcParams = default)
+    {
+        NetworkManager.Singleton.Shutdown();
+        // SceneManager.LoadScene("DeathScreen");
+        SceneManager.LoadScene("EvanDeathScreen");
+        GameObject.Destroy(GameObject.Find("Network Manager"));
+    }
+}
