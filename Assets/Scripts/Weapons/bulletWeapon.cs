@@ -443,6 +443,10 @@ public class bulletWeapon : NetworkBehaviour
         {
             Physics2D.IgnoreCollision(players[i].GetComponent<BoxCollider2D>(), bullet.GetComponent<BoxCollider2D>());
         }
+        
+        //enemy's collider too (concerned about how this will interact with other enemy objects)
+        Physics2D.IgnoreCollision(gameObject.GetComponent<BoxCollider2D>(), bullet.GetComponent<BoxCollider2D>());  //ignore physics based collision box
+        Physics2D.IgnoreCollision(gameObject.GetComponent<BoxCollider2D>(), bullet.GetComponent<CircleCollider2D>()); //ignore trigger also (avoid it from deleting its own bullets)
     }
 
     // draws debug lines
