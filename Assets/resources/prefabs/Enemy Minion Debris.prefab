@@ -115,7 +115,7 @@ GameObject:
   m_Component:
   - component: {fileID: 6443043679028137750}
   m_Layer: 0
-  m_Name: Debris
+  m_Name: Enemy Minion Debris
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -5055,12 +5055,12 @@ MonoBehaviour:
   rotationMax: 20
   timeToLive: 10
   sprites:
-  - {fileID: 1183389650, guid: ca034f13211ca524ab61690142998cd3, type: 3}
-  - {fileID: 1579101613, guid: ca034f13211ca524ab61690142998cd3, type: 3}
-  - {fileID: 315002695, guid: ca034f13211ca524ab61690142998cd3, type: 3}
-  - {fileID: -28308821, guid: ca034f13211ca524ab61690142998cd3, type: 3}
-  - {fileID: 121665107, guid: ca034f13211ca524ab61690142998cd3, type: 3}
-  - {fileID: -421526325, guid: ca034f13211ca524ab61690142998cd3, type: 3}
+  - {fileID: -795675551, guid: 7223c73b931a01c4ab5a2183a5affdfe, type: 3}
+  - {fileID: -1208455349, guid: 7223c73b931a01c4ab5a2183a5affdfe, type: 3}
+  - {fileID: 873459651, guid: 7223c73b931a01c4ab5a2183a5affdfe, type: 3}
+  - {fileID: 261508632, guid: 7223c73b931a01c4ab5a2183a5affdfe, type: 3}
+  - {fileID: 458150349, guid: 7223c73b931a01c4ab5a2183a5affdfe, type: 3}
+  - {fileID: 424994226, guid: 7223c73b931a01c4ab5a2183a5affdfe, type: 3}
 --- !u!50 &6443043679439888200
 Rigidbody2D:
   serializedVersion: 4

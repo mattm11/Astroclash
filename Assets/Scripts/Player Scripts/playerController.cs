@@ -233,6 +233,10 @@ public class playerController : NetworkBehaviour
             GameObject.Destroy(collider.gameObject);
             TakeDamage(collider.gameObject.GetComponent<bulletProjectiles>().getDamage());
         }
+        else if (collider.gameObject.tag == "enemyBullet" && IsOwner == false)
+        {
+            GameObject.Destroy(collider.gameObject);
+        }
 
         // logic to destroy the bullet that collided with other objects
         if (collider.gameObject.tag == "friendlyBullet" && IsOwner == false)
@@ -424,7 +428,7 @@ public class playerController : NetworkBehaviour
     [ClientRpc]
     private void spawnDebrisClientRpc(Vector3 _position)
     {
-        UnityEngine.Object debris = Resources.Load("prefabs/Debris");
+        UnityEngine.Object debris = Resources.Load("prefabs/Player Debris");
         for (int i = 0; i < debrisAmount; i++)
         {
             Instantiate(debris, _position, Quaternion.identity);

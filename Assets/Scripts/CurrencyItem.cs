@@ -6,7 +6,7 @@ using Astroclash;
 
 public class CurrencyItem : NetworkBehaviour
 {
-    public float value = 100.0f;
+    private NetworkVariable<float> value = new NetworkVariable<float>(0.0f);
     public float stayAlive = 5.0f; //time to say alive untouched in seconds
     private float aliveFor = 0.0f;
 
@@ -26,11 +26,16 @@ public class CurrencyItem : NetworkBehaviour
     {
         if(collider.gameObject.tag == "Player")
         {
-            collider.gameObject.GetComponent<playerController>().addCurrency(value);
+            collider.gameObject.GetComponent<playerController>().addCurrency(value.Value);
             ulong netID = gameObject.GetComponent<NetworkObject>().NetworkObjectId;
 
             despawnEntityServerRpc(netID);
         }
+    }
+
+    public void setValue(float _value)
+    {
+        value.Value = _value;
     }
 
     [ServerRpc(RequireOwnership = false)]

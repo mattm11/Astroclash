@@ -3,7 +3,7 @@ using Unity.Netcode;
 
 public class SpawnManager : MonoBehaviour
 {
-    public void spawnEntity(string _gameObjectName, Vector3 _position)
+    public GameObject spawnEntity(string _gameObjectName, Vector3 _position)
     {
         Debug.Log("Spawning \"" + _gameObjectName + "\" at position: " + _position.ToString());
         UnityEngine.Object prefab = Resources.Load("prefabs/Entities/" + _gameObjectName);
@@ -17,6 +17,8 @@ public class SpawnManager : MonoBehaviour
         entity.GetComponent<NetworkObject>().Spawn();
         entity.transform.position = _position;
         entity.transform.localPosition = _position;
+
+        return entity;
     }
 
     public void despawnEntity(ulong _networkID)

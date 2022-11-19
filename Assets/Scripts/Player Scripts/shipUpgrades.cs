@@ -44,9 +44,9 @@ public class shipUpgrades : MonoBehaviour
             player.GetComponent<playerController>().setHealth(newMax);
 
             player.GetComponent<playerController>().subtractCurrency(hullUpgradeCost);
+
+            increaseLevel();
         }
-        
-        increaseLevel();
     }
 
     public void upgradeSpeed(float _speedIncrement)
@@ -60,9 +60,9 @@ public class shipUpgrades : MonoBehaviour
             player.GetComponent<playerController>().setAcceleration(newMax);
 
             player.GetComponent<playerController>().subtractCurrency(speedUpgradeCost);
-        }
 
-        increaseLevel();
+            increaseLevel();
+        }
     }
 
     public void upgradeRepair(float _repairIncrement)
@@ -73,9 +73,9 @@ public class shipUpgrades : MonoBehaviour
             player.GetComponent<playerController>().setRepair(newRepair);
 
             player.GetComponent<playerController>().subtractCurrency(repairUpgradeCost);
-        }
 
-        increaseLevel();
+            increaseLevel();
+        }
     }
 
     public void upgradeEnergyCapacity(float _energyCapacityIncrement)
@@ -87,9 +87,9 @@ public class shipUpgrades : MonoBehaviour
             player.GetComponent<playerController>().setMaxEnergy(newCap);
 
             player.GetComponent<playerController>().subtractCurrency(capactiyUpgradeCost);
-        }
 
-        increaseLevel();
+            increaseLevel();
+        }
     }
 
     public void upgradeRecharge(float _rechargeIncrement)
@@ -100,9 +100,8 @@ public class shipUpgrades : MonoBehaviour
             player.GetComponent<playerController>().setRechargeRate(newRecharge);
 
             player.GetComponent<playerController>().subtractCurrency(rechargeUpgradeCost);
+            increaseLevel();
         }
-
-        increaseLevel();
     }
 
     public int getShipLevel()
