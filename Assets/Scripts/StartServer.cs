@@ -40,13 +40,12 @@ public class StartServer : MonoBehaviour
     private void createEnemyServerRpc()
     {   
         Object prefab = Resources.Load("prefabs/Entities/Enemy Minion");
-        GameObject enemy = (GameObject)Instantiate(prefab, new Vector3(0.0f, 0.0f, 0.0f), Quaternion.identity);
-        enemy.GetComponent<NetworkObject>().Spawn();
+        GameObject enemy;
 
-        enemy = (GameObject)Instantiate(prefab, new Vector3(0.0f, 0.0f, 0.0f), Quaternion.identity);
-        enemy.GetComponent<NetworkObject>().Spawn();
-
-        enemy = (GameObject)Instantiate(prefab, new Vector3(0.0f, 0.0f, 0.0f), Quaternion.identity);
-        enemy.GetComponent<NetworkObject>().Spawn();
+        for (int i = 0; i < 1; i++)
+        {
+            enemy = (GameObject)Instantiate(prefab, new Vector3(0.0f, 0.0f, 0.0f), Quaternion.identity);
+            enemy.GetComponent<NetworkObject>().Spawn();
+        }
     }
 }

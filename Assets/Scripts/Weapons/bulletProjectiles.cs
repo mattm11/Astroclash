@@ -9,6 +9,7 @@ public class bulletProjectiles : NetworkBehaviour
     private float damage = 0.0f;
     private ulong clientID;
     private Vector3 startPosition = new Vector3();
+    public bool isPlayerBullet = false;
 
     void Start()
     {
@@ -39,6 +40,7 @@ public class bulletProjectiles : NetworkBehaviour
         range = _range;
         damage = _damage;
         clientID = _clientID;
+        isPlayerBullet = true;
     }
 
     public void setStats(float _range, float _damage)

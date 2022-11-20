@@ -74,6 +74,8 @@ public class playerController : NetworkBehaviour
 
         if (IsOwner)
         {
+            UIplates.SetActive(false);
+
             healthFrameValue = health.Value;
             GameObject parent = gameObject.transform.parent.gameObject;
             playerCamera = parent.GetComponentInChildren<Camera>();

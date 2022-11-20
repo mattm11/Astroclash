@@ -5,7 +5,8 @@ using Unity.Netcode;
 
 public class enemyShipController : NetworkBehaviour
 {
-    private NetworkVariable<float> health = new NetworkVariable<float>(100.0f);
+    private const float MAX_MINION_HEALTH = 100.0f;
+    private NetworkVariable<float> health = new NetworkVariable<float>(MAX_MINION_HEALTH);
 
     Vector3 walkPosition;
     Vector3 prevWalkPosition;
@@ -29,6 +30,11 @@ public class enemyShipController : NetworkBehaviour
     private float bulletRange = 15.0f;
     private float fireRate = 1.0f;  
     private bool hasFired = true; 
+    private bool isPatrol = false;
+
+    private GameObject healthBar;
+    private GameObject UIPlate;
+    private GameObject shipObject;
 
     //misc
     private float score = 100.0f;
@@ -38,18 +44,18 @@ public class enemyShipController : NetworkBehaviour
     void Start()
     {
         anchor = gameObject.transform.position;
+        walkPosition = gameObject.transform.position;
 
-        //Generate first walk position
-        if (IsServer)
-        {
-            generateWalk(anchor, tether);
-            StartCoroutine(Patrol(1.0f));
-        }
+        UIPlate = gameObject.transform.parent.Find("UI Plates").gameObject;
+        healthBar = UIPlate.transform.Find("Health bar").gameObject;
+        healthBar.GetComponent<UIBar>().SetMaxValue(MAX_MINION_HEALTH);
     }
 
     // Update is called once per frame
     void Update()
     {
+        UIPlate.transform.position = gameObject.transform.position + new Vector3(0.0f, 0.5f, 0.0f);
+
         if (targetPlayer != null)
         {
             lookAtPlayer();
@@ -58,15 +64,16 @@ public class enemyShipController : NetworkBehaviour
         if (health.Value <= 0.0f && IsServer)
         {
             spawnDebrisClientRpc(gameObject.transform.position);
-            ulong netID = gameObject.GetComponent<NetworkObject>().NetworkObjectId;
+            ulong netID = gameObject.transform.parent.GetComponent<NetworkObject>().NetworkObjectId;
             GameObject credit = GameObject.FindGameObjectWithTag("Spawn Manager").GetComponent<SpawnManager>().spawnEntity("Credit", gameObject.transform.position);
             credit.GetComponent<CurrencyItem>().setValue(credits);
-            gameObject.GetComponent<NetworkObject>().Despawn();
+            GameObject.FindGameObjectWithTag("Spawn Manager").GetComponent<SpawnManager>().despawnEntity(netID);
         }
 
         //Behavior routines
-        if (gameObject.transform.position == walkPosition && IsServer && targetPlayer == null)
+        if (!isPatrol && IsServer && targetPlayer == null)
         {
+            isPatrol = true;
             generateWalk(anchor, tether);
             StartCoroutine(Patrol(1.0f));
         }
@@ -84,7 +91,7 @@ public class enemyShipController : NetworkBehaviour
             float damage = collider.GetComponent<bulletProjectiles>().getDamage();
             dealDamageServerRpc(damage);
         }
-        else if (!IsServer && collider.tag == "enemyBullet")
+        else if (!IsServer && collider.tag == "enemyBullet" && collider.GetComponent<bulletProjectiles>().isPlayerBullet)
         {
             Debug.Log("Deleted enemy bullet");
             GameObject.Destroy(collider.gameObject);
@@ -152,6 +159,8 @@ public class enemyShipController : NetworkBehaviour
         {
             walkPosition = gameObject.transform.position;
         }
+
+        isPatrol = false;
     }
     private IEnumerator LerpRotation()
     {
@@ -179,14 +188,19 @@ public class enemyShipController : NetworkBehaviour
     private IEnumerator checkDistance(GameObject[] _player)
     {
         bool foundPlayer = false;
+        float closestDistance = 0.0f;
 
         for (int i = 0; i < _player.Length; i++)
         {
             float distance = Vector3.Distance(gameObject.transform.position, _player[i].transform.position);
             if (distance <= aggroDistance)
             {
-                targetPlayer = _player[i];
-                foundPlayer = true;
+                if (closestDistance == 0.0f || distance < closestDistance)
+                {
+                    closestDistance = distance;
+                    targetPlayer = _player[i];
+                    foundPlayer = true;
+                }
             }
             yield return null;
         }
@@ -224,8 +238,8 @@ public class enemyShipController : NetworkBehaviour
     [ServerRpc(RequireOwnership = false)]
     void dealDamageServerRpc(float _damage)
     {
-        Debug.Log("This object has been dealt damage!");
         health.Value -= _damage;
+        updateHealthBarClientRpc();
     }
 
     [ClientRpc]
@@ -268,5 +282,11 @@ public class enemyShipController : NetworkBehaviour
         {
             Instantiate(debris, _position, Quaternion.identity);
         }
+    }
+
+    [ClientRpc]
+    private void updateHealthBarClientRpc()
+    {
+        healthBar.GetComponent<UIBar>().SetMaxValue(health.Value);
     }
 }
