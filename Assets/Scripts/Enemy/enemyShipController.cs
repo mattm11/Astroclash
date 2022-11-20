@@ -49,12 +49,13 @@ public class enemyShipController : NetworkBehaviour
         UIPlate = gameObject.transform.parent.Find("UI Plates").gameObject;
         healthBar = UIPlate.transform.Find("Health bar").gameObject;
         healthBar.GetComponent<UIBar>().SetMaxValue(MAX_MINION_HEALTH);
+        healthBar.GetComponent<UIBar>().SetValue(health.Value);
     }
 
     // Update is called once per frame
     void Update()
     {
-        UIPlate.transform.position = gameObject.transform.position + new Vector3(0.0f, 0.5f, 0.0f);
+        UIPlate.transform.position = gameObject.transform.position;
 
         if (targetPlayer != null)
         {
@@ -287,6 +288,7 @@ public class enemyShipController : NetworkBehaviour
     [ClientRpc]
     private void updateHealthBarClientRpc()
     {
-        healthBar.GetComponent<UIBar>().SetMaxValue(health.Value);
+        Debug.Log("Changing healthbar of enemy");
+        healthBar.GetComponent<UIBar>().SetValue(health.Value);
     }
 }
