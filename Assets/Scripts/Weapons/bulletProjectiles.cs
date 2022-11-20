@@ -7,6 +7,7 @@ public class bulletProjectiles : NetworkBehaviour
 {
     private float range = 0.0f;
     private float damage = 0.0f;
+    private ulong clientID;
     private Vector3 startPosition = new Vector3();
 
     void Start()
@@ -33,6 +34,13 @@ public class bulletProjectiles : NetworkBehaviour
         }
     }
 
+    public void setStats(float _range, float _damage, ulong _clientID)
+    {
+        range = _range;
+        damage = _damage;
+        clientID = _clientID;
+    }
+
     public void setStats(float _range, float _damage)
     {
         range = _range;
@@ -42,5 +50,10 @@ public class bulletProjectiles : NetworkBehaviour
     public float getDamage()
     {
         return damage;
+    }
+
+    public ulong getSpawnerID()
+    {
+        return clientID;
     }
 }

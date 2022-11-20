@@ -45,15 +45,17 @@ public class playerController : NetworkBehaviour
 
     private const float DEFAULT_MAX_HEALTH = 100;
     private float maxHealth = DEFAULT_MAX_HEALTH;
-    public float health = DEFAULT_MAX_HEALTH;
+    // public float health = DEFAULT_MAX_HEALTH;
+    public NetworkVariable<float> health = new NetworkVariable<float>(DEFAULT_MAX_HEALTH);
+    private float healthFrameValue;
+    private bool inCombat = false;
+    private bool countDownStaterted = false;
+    private float combatTimer = 0.0f;
 
     // player energy for UI
     private const float DEFAULT_MAX_ENERGY = 20.0f;
     private float maxEnergy = DEFAULT_MAX_ENERGY;
     public float energy = DEFAULT_MAX_ENERGY;
-
-    // player currency for round
-    private NetworkVariable<float> credits = new NetworkVariable<float>();
 
     public Camera playerCamera;
     public static string playerName;
@@ -61,19 +63,18 @@ public class playerController : NetworkBehaviour
 
     void Start()
     {
-        // bullet and player collision ignore
-        Physics2D.IgnoreLayerCollision(6, 7);
-
         UIplates = gameObject.transform.parent.transform.Find("UI Plates").gameObject;
         // Find nameplate, give name
         namePlate = UIplates.transform.Find("Nameplate").gameObject;
-        setNameServerRpc(playerName);
+        if (IsOwner)
+            setNameServerRpc(playerName);
         // Find health plate and nameplate
         healthPlate = UIplates.transform.Find("Health bar").gameObject;
         healthPlate.GetComponent<UIBar>().SetValue(maxHealth);
 
         if (IsOwner)
         {
+            healthFrameValue = health.Value;
             GameObject parent = gameObject.transform.parent.gameObject;
             playerCamera = parent.GetComponentInChildren<Camera>();
             if (playerCamera == null)
@@ -101,10 +102,6 @@ public class playerController : NetworkBehaviour
 
             energyBar = canvas.transform.Find("Energy Bar").gameObject;
             energyBar.GetComponent<UIBar>().SetMaxValue(maxEnergy);
-
-            //Set initial credits for round
-            credits.Value = 0;
-
             //Find weapon objects
             bulletweaponObject = gameObject.transform.Find("BulletWeapon").gameObject;
 
@@ -130,7 +127,7 @@ public class playerController : NetworkBehaviour
             shipUpgradeUI.SetActive(false);
         }
         // Remove other non-client player's UI elements and event system
-        else
+        else if (!IsServer && !IsOwner)
         {
             gameObject.transform.Find("Canvas").gameObject.SetActive(false);
             gameObject.transform.Find("EventSystem").gameObject.SetActive(false);
@@ -144,6 +141,7 @@ public class playerController : NetworkBehaviour
         namePlate.GetComponent<TMP_Text>().text = networkName.Value.ToString();
         // update UI plates to follow camera
         UIplates.transform.position = gameObject.transform.position;
+        healthPlate.GetComponent<UIBar>().SetValue(health.Value);
 
         if (IsOwner)
         {
@@ -152,9 +150,6 @@ public class playerController : NetworkBehaviour
             newPosition.x = gameObject.transform.position.x;
             newPosition.y = gameObject.transform.position.y;
             playerCamera.transform.position = newPosition;
-
-
-
 
             //Movement is broken down into: X = Movement_Speed * cos(rotation_angle) Y = Movement_Speed * sin(rotation_angle)
             float angle = (float)(transform.eulerAngles.z * (Math.PI / 180));
@@ -203,15 +198,32 @@ public class playerController : NetworkBehaviour
             }
 
             currencyUI.GetComponent<TMP_Text>().text = money.ToString();
-            repair();
+            if (inCombat && countDownStaterted == false)
+            {
+                Debug.Log("In Combat!");
+                StartCoroutine(combatTimerRoutine());
+                countDownStaterted = true;
+            }
+            else if (!inCombat)
+            {
+                Debug.Log("Out of Combat!");
+                repair();
+            }
+            
 
             if (!Input.GetKey(KeyCode.Space))
             {
                 recharge();
             }
 
+            healthBar.GetComponent<UIBar>().SetValue(health.Value);
 
-            healthBar.GetComponent<UIBar>().SetValue(health);
+            Debug.Log("Health Frame: " + healthFrameValue);
+            if (healthFrameValue != health.Value)
+            {
+                setHealthServerRpc(healthFrameValue);
+            }
+            
         }
     }
 
@@ -224,7 +236,6 @@ public class playerController : NetworkBehaviour
                 UILogic.GetComponent<UIRegistrar>().enableIndex(0);
                 disableWeapons();
             }
-
         }
 
         // bullet weapon interaction logic
@@ -232,8 +243,13 @@ public class playerController : NetworkBehaviour
         {
             GameObject.Destroy(collider.gameObject);
             TakeDamage(collider.gameObject.GetComponent<bulletProjectiles>().getDamage());
+            inCombat = true;
         }
-        else if (collider.gameObject.tag == "enemyBullet" && IsOwner == false)
+        else if 
+        (
+            collider.gameObject.tag == "enemyBullet" && IsOwner == false 
+            && gameObject.transform.parent.gameObject.GetComponent<NetworkObject>().NetworkObjectId != collider.gameObject.GetComponent<bulletProjectiles>().getSpawnerID()
+        )
         {
             GameObject.Destroy(collider.gameObject);
         }
@@ -242,6 +258,7 @@ public class playerController : NetworkBehaviour
         if (collider.gameObject.tag == "friendlyBullet" && IsOwner == false)
         {
             GameObject.Destroy(collider.gameObject);
+            Debug.Log("Deleting friendly bullet!");
         }
     }
 
@@ -259,12 +276,14 @@ public class playerController : NetworkBehaviour
 
     private void TakeDamage(float damage)
     {
-        health -= damage;
+        healthFrameValue -= damage;
+        inCombat = true;
+        countDownStaterted = false;
+        combatTimer = 0.0f;
 
-        healthBar.GetComponent<UIBar>().SetValue(health);
-        healthPlate.GetComponent<UIBar>().SetValue(health);
+        healthBar.GetComponent<UIBar>().SetValue(healthFrameValue);
 
-        if (health <= 0)
+        if (healthFrameValue <= 0)
         {
             SceneManager.LoadScene("DeathScreen");
             spawnDebrisServerRpc(gameObject.transform.position);
@@ -275,15 +294,27 @@ public class playerController : NetworkBehaviour
 
     }
 
+    private IEnumerator combatTimerRoutine()
+    {
+        while (combatTimer <= 3.0f)
+        {
+            combatTimer += Time.deltaTime;
+            Debug.Log("Combat Timer: " + combatTimer);
+            yield return null;
+        }
+        inCombat = false;
+        countDownStaterted = false;
+    }
+    
     private void repair()
     {
-        if (health + (repairAmount * Time.deltaTime) <= maxHealth)
+        if (healthFrameValue + (repairAmount * Time.deltaTime) <= maxHealth)
         {
-            health += repairAmount * Time.deltaTime;
+            healthFrameValue += (repairAmount * 10.0f *  Time.deltaTime);
         }
-        else if (health + (repairAmount * Time.deltaTime) > maxHealth)
+        else if (health.Value + (repairAmount * Time.deltaTime) > maxHealth && healthFrameValue != maxHealth)
         {
-            health = maxHealth;
+            healthFrameValue = maxHealth;
         }
     }
     private void recharge()
@@ -329,15 +360,16 @@ public class playerController : NetworkBehaviour
     }
     public float getHealth()
     {
-        return health;
+        return health.Value;
     }
     public float getMaxHealth()
     {
         return maxHealth;
     }
-    public void setHealth(float _health)
+    [ServerRpc]
+    public void setHealthServerRpc(float _health)
     {
-        health = _health;
+        health.Value = _health;
     }
     public void setMaxHealth(float _maxHealth)
     {

@@ -226,6 +226,9 @@ public class bulletWeapon : NetworkBehaviour
 
         float relativeBulletSpeed = controller.getStat("Projectile Speed") + player.GetComponent<playerController>().getVelocity();
 
+        //this is so gross, maybe have the playerController hold this information
+        ulong clientID = gameObject.transform.parent.gameObject.transform.parent.gameObject.GetComponent<NetworkObject>().NetworkObjectId;
+
         if (sumDeltaTime >= secondsPerRound && currEnergy > 0.0f)
         {
             if(currEnergy - energyCost < 0.0f)
@@ -259,7 +262,8 @@ public class bulletWeapon : NetworkBehaviour
                             gameObject.transform.position, 
                             relativeBulletSpeed,
                             controller.getStat("Projectile Range"),
-                            controller.getStat("Projectile Damage")
+                            controller.getStat("Projectile Damage"),
+                            clientID
                         );
 
                         fireBulletServerRpc(
@@ -267,7 +271,8 @@ public class bulletWeapon : NetworkBehaviour
                             gameObject.transform.position, 
                             relativeBulletSpeed,
                             controller.getStat("Projectile Range"),
-                            controller.getStat("Projectile Damage")
+                            controller.getStat("Projectile Damage"),
+                            clientID
                         );
 
                         fireBulletServerRpc(
@@ -275,7 +280,8 @@ public class bulletWeapon : NetworkBehaviour
                             gameObject.transform.position, 
                             relativeBulletSpeed,
                             controller.getStat("Projectile Range"),
-                            controller.getStat("Projectile Damage")
+                            controller.getStat("Projectile Damage"),
+                            clientID
                         );
                     }
                 }
@@ -297,7 +303,8 @@ public class bulletWeapon : NetworkBehaviour
                                 gameObject.transform.position, 
                                 relativeBulletSpeed,
                                 controller.getStat("Projectile Range"),
-                                controller.getStat("Projectile Damage")
+                                controller.getStat("Projectile Damage"),
+                                clientID
                             );
                         }
                     }
@@ -312,7 +319,8 @@ public class bulletWeapon : NetworkBehaviour
                             gameObject.transform.position, 
                             relativeBulletSpeed,
                             controller.getStat("Projectile Range"),
-                            controller.getStat("Projectile Damage")
+                            controller.getStat("Projectile Damage"),
+                            clientID
                         );
 
                         fireBulletServerRpc(
@@ -320,7 +328,8 @@ public class bulletWeapon : NetworkBehaviour
                             gameObject.transform.position, 
                             relativeBulletSpeed,
                             controller.getStat("Projectile Range"),
-                            controller.getStat("Projectile Damage")
+                            controller.getStat("Projectile Damage"),
+                            clientID
                         );
                     }
                     
@@ -333,7 +342,8 @@ public class bulletWeapon : NetworkBehaviour
                             gameObject.transform.position, 
                             relativeBulletSpeed,
                             controller.getStat("Projectile Range"),
-                            controller.getStat("Projectile Damage")
+                            controller.getStat("Projectile Damage"),
+                            clientID
                     );
                 }
             }
@@ -351,7 +361,8 @@ public class bulletWeapon : NetworkBehaviour
                             gameObject.transform.position, 
                             relativeBulletSpeed,
                             controller.getStat("Projectile Range"),
-                            controller.getStat("Projectile Damage")
+                            controller.getStat("Projectile Damage"),
+                            clientID
                     );
                 }
                 for (int i = 0; i < controller.getStat("Projectile Count")/2; i++)
@@ -365,7 +376,8 @@ public class bulletWeapon : NetworkBehaviour
                             gameObject.transform.position, 
                             relativeBulletSpeed * 0.80f,
                             controller.getStat("Projectile Range"),
-                            controller.getStat("Projectile Damage")
+                            controller.getStat("Projectile Damage"),
+                            clientID
                     );
                 }
                 for (int i = 0; i < controller.getStat("Projectile Count")/4; i++)
@@ -379,7 +391,8 @@ public class bulletWeapon : NetworkBehaviour
                             gameObject.transform.position, 
                             relativeBulletSpeed * 0.60f,
                             controller.getStat("Projectile Range"),
-                            controller.getStat("Projectile Damage")
+                            controller.getStat("Projectile Damage"),
+                            clientID
                     );
                 }
             }
@@ -392,13 +405,13 @@ public class bulletWeapon : NetworkBehaviour
                     float randomAngle = Random.Range(-controller.getStat("Shot Spread")/2, controller.getStat("Shot Spread")/2);
                     Vector3 fireVector = rotateVector(transform.right, randomAngle);
 
-                    Debug.Log("Firing Weapon");
                     fireBulletServerRpc(
                         fireVector, 
                         gameObject.transform.position, 
                         relativeBulletSpeed,
                         controller.getStat("Projectile Range"),
-                        controller.getStat("Projectile Damage")
+                        controller.getStat("Projectile Damage"),
+                        clientID
                     );
                 }
             }
@@ -410,13 +423,13 @@ public class bulletWeapon : NetworkBehaviour
 
     // Network Functions
     [ServerRpc]
-    void fireBulletServerRpc(Vector3 _direction, Vector3 _position, float _projectileSpeed, float _projectileRange, float _projectileDamage)
+    void fireBulletServerRpc(Vector3 _direction, Vector3 _position, float _projectileSpeed, float _projectileRange, float _projectileDamage, ulong _clientID)
     {
-        createBulletClientRpc(_direction, _position, _projectileSpeed, _projectileRange, _projectileDamage);
+        createBulletClientRpc(_direction, _position, _projectileSpeed, _projectileRange, _projectileDamage, _clientID);
     }
 
     [ClientRpc]
-    void createBulletClientRpc(Vector3 _direction, Vector3 _position, float _projectileSpeed, float _projectileRange, float _projectileDamage)
+    void createBulletClientRpc(Vector3 _direction, Vector3 _position, float _projectileSpeed, float _projectileRange, float _projectileDamage, ulong _clientID)
     {  
         float angle = Mathf.Atan2(_direction.y, _direction.x) * Mathf.Rad2Deg;
         Quaternion rotation = Quaternion.AngleAxis(angle, transform.forward);
@@ -424,15 +437,18 @@ public class bulletWeapon : NetworkBehaviour
         GameObject bullet = null;
         bullet = Instantiate(defaultBulletPref, _position, rotation);
         bullet.GetComponent<Rigidbody2D>().AddForce(_direction * _projectileSpeed, ForceMode2D.Impulse);
-        bullet.GetComponent<bulletProjectiles>().setStats(_projectileRange, _projectileDamage);
+        bullet.GetComponent<bulletProjectiles>().setStats(_projectileRange, _projectileDamage, _clientID);
         
         if (IsOwner && IsServer == false)
         {
+            Debug.Log("Creating friendly bullet");
             bullet.tag = "friendlyBullet";
+            Physics2D.IgnoreCollision(gameObject.transform.parent.gameObject.GetComponent<BoxCollider2D>(), bullet.GetComponent<CircleCollider2D>()); //ignore trigger also (avoid it from deleting its own bullets)
         }
         
         if (IsOwner == false && IsServer == false)
         {
+            Debug.Log("Creating enemy bullet");
             bullet.GetComponent<SpriteRenderer>().color = new Color(1.0f, 0.25f, 0.25f);
             bullet.tag = "enemyBullet";
         }
@@ -443,10 +459,6 @@ public class bulletWeapon : NetworkBehaviour
         {
             Physics2D.IgnoreCollision(players[i].GetComponent<BoxCollider2D>(), bullet.GetComponent<BoxCollider2D>());
         }
-        
-        //enemy's collider too (concerned about how this will interact with other enemy objects)
-        Physics2D.IgnoreCollision(gameObject.GetComponent<BoxCollider2D>(), bullet.GetComponent<BoxCollider2D>());  //ignore physics based collision box
-        Physics2D.IgnoreCollision(gameObject.GetComponent<BoxCollider2D>(), bullet.GetComponent<CircleCollider2D>()); //ignore trigger also (avoid it from deleting its own bullets)
     }
 
     // draws debug lines
@@ -519,6 +531,8 @@ public class bulletWeapon : NetworkBehaviour
         float energyCost = (controller.getStat("Projectile Damage") * controller.getStat("Projectile Count") - (controller.getStat("Fire Rate") * 10));
         float currEnergy = player.GetComponent<playerController>().getEnergy();
 
+        ulong clientID = gameObject.transform.parent.gameObject.GetComponent<NetworkObject>().NetworkObjectId;
+
         if(currEnergy - energyCost < 0.0f)
         {
             //penality for over use of energy (3 seconds)
@@ -551,7 +565,8 @@ public class bulletWeapon : NetworkBehaviour
                 gameObject.transform.position, 
                 relativeBulletSpeed,
                 controller.getStat("Projectile Range"),
-                damage
+                damage,
+                clientID
         );
     }
     private Vector3 rotateVector(Vector3 vector, float angle)

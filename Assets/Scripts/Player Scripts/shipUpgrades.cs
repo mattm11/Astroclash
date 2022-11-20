@@ -41,7 +41,7 @@ public class shipUpgrades : MonoBehaviour
         {
             float newMax = player.GetComponent<playerController>().getMaxHealth() + _healthIncrease;
             player.GetComponent<playerController>().setMaxHealth(newMax);
-            player.GetComponent<playerController>().setHealth(newMax);
+            player.GetComponent<playerController>().setHealthServerRpc(newMax);
 
             player.GetComponent<playerController>().subtractCurrency(hullUpgradeCost);
 
