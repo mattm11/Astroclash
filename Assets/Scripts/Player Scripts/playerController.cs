@@ -33,6 +33,7 @@ public class playerController : NetworkBehaviour
     private GameObject currencyUI;
     private GameObject energyBar;
     private GameObject levelUI;
+    private GameObject escapeUI;
 
     public List<GameObject> weaponRegistry = new List<GameObject>();
     private GameObject healthBar;
@@ -112,6 +113,8 @@ public class playerController : NetworkBehaviour
 
             levelUI = canvas.transform.Find("Level").gameObject;
 
+            escapeUI = canvas.transform.Find("Escape Menu").gameObject;
+
             bulletweaponObject.GetComponent<bulletWeapon>().setUpgradeUI(bulletUpgradeUI);
             bulletweaponObject.GetComponent<bulletWeapon>().setCanvas(canvas);  //Sets the canvas object to draw debug
 
@@ -127,6 +130,7 @@ public class playerController : NetworkBehaviour
             spaceStationButton.SetActive(false);
             bulletUpgradeUI.SetActive(false);
             shipUpgradeUI.SetActive(false);
+            escapeUI.SetActive(false);
         }
         // Remove other non-client player's UI elements and event system
         else if (!IsServer && !IsOwner)
@@ -199,6 +203,11 @@ public class playerController : NetworkBehaviour
                 }
             }
 
+            if (Input.GetKey(KeyCode.Escape))
+            {
+                escapeUI.SetActive(true);
+            }
+
             currencyUI.GetComponent<TMP_Text>().text = money.ToString();
             if (inCombat && countDownStaterted == false)
             {
@@ -226,6 +235,7 @@ public class playerController : NetworkBehaviour
                 setHealthServerRpc(healthFrameValue);
             }
             
+            checkDeath();
         }
     }
 
@@ -285,20 +295,12 @@ public class playerController : NetworkBehaviour
 
         healthBar.GetComponent<UIBar>().SetValue(healthFrameValue);
 
-        if (healthFrameValue <= 0)
-        {
-            SceneManager.LoadScene("DeathScreen");
-            spawnDebrisServerRpc(gameObject.transform.position);
-            ulong clientID = gameObject.transform.parent.gameObject.GetComponent<NetworkObject>().OwnerClientId;
-            ulong objectID = gameObject.transform.parent.gameObject.GetComponent<NetworkObject>().NetworkObjectId;
-            despawnPlayerServerRpc(clientID, objectID);
-        }
-
+        checkDeath();
     }
 
     private IEnumerator combatTimerRoutine()
     {
-        while (combatTimer <= 3.0f)
+        while (combatTimer <= 5.0f)
         {
             combatTimer += Time.deltaTime;
             Debug.Log("Combat Timer: " + combatTimer);
@@ -306,6 +308,22 @@ public class playerController : NetworkBehaviour
         }
         inCombat = false;
         countDownStaterted = false;
+    }
+
+    private IEnumerator deathTimerRoutine()
+    {
+        float deathTimer = 0.0f;
+        while (deathTimer <= 3.0f)
+        {
+            deathTimer += Time.deltaTime;
+            yield return null;
+        }
+
+        Debug.Log("De-Spawning player");
+        //SceneManager.LoadScene("DeathScreen");
+        ulong clientID = gameObject.transform.parent.gameObject.GetComponent<NetworkObject>().OwnerClientId;
+        ulong objectID = gameObject.transform.parent.gameObject.GetComponent<NetworkObject>().NetworkObjectId;
+        despawnPlayerServerRpc(clientID, objectID);
     }
     
     private void repair()
@@ -345,6 +363,22 @@ public class playerController : NetworkBehaviour
         {
             weaponRegistry[i].SetActive(true);
         }
+    }
+    private void checkDeath()
+    {
+        if (healthFrameValue <= 0)
+        {
+            spawnDebrisServerRpc(gameObject.transform.position);
+            gameObject.GetComponent<playerController>().enabled = false;
+            gameObject.GetComponent<SpriteRenderer>().enabled = false;
+            canvas.SetActive(false);
+            StartCoroutine(deathTimerRoutine());
+        }
+    }
+
+    public void setHealthFrame(float _frame)
+    {
+        healthFrameValue = _frame;
     }
 
     // Setters and Getters
@@ -473,7 +507,7 @@ public class playerController : NetworkBehaviour
     {
         NetworkManager.Singleton.Shutdown();
         // SceneManager.LoadScene("DeathScreen");
-        SceneManager.LoadScene("EvanDeathScreen");
+        SceneManager.LoadScene("DeathScreen");
         GameObject.Destroy(GameObject.Find("Network Manager"));
     }
 }
