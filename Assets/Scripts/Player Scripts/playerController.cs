@@ -34,6 +34,7 @@ public class playerController : NetworkBehaviour
     private GameObject energyBar;
     private GameObject levelUI;
     private GameObject escapeUI;
+    private GameObject usernameUI;
 
     public List<GameObject> weaponRegistry = new List<GameObject>();
     private GameObject healthBar;
@@ -60,7 +61,7 @@ public class playerController : NetworkBehaviour
 
     public Camera playerCamera;
     public static string playerName;
-    public NetworkVariable<FixedString64Bytes> networkName = new NetworkVariable<FixedString64Bytes>();
+    public NetworkVariable<FixedString64Bytes> networkName = new NetworkVariable<FixedString64Bytes>("Anonymous");
 
     void Start()
     {
@@ -112,6 +113,7 @@ public class playerController : NetworkBehaviour
             bulletUpgradeUI = canvas.transform.Find("BulletUpgradeUI").gameObject;
 
             levelUI = canvas.transform.Find("Level").gameObject;
+            usernameUI = canvas.transform.Find("Username").gameObject;
 
             escapeUI = canvas.transform.Find("Escape Menu").gameObject;
 
@@ -151,6 +153,8 @@ public class playerController : NetworkBehaviour
 
         if (IsOwner)
         {
+            usernameUI.GetComponent<TMP_Text>().text = networkName.Value.ToString();
+
             //update the camera origin
             Vector3 newPosition = playerCamera.transform.position;
             newPosition.x = gameObject.transform.position.x;
@@ -371,6 +375,7 @@ public class playerController : NetworkBehaviour
             spawnDebrisServerRpc(gameObject.transform.position);
             gameObject.GetComponent<playerController>().enabled = false;
             gameObject.GetComponent<SpriteRenderer>().enabled = false;
+            gameObject.GetComponent<BoxCollider2D>().enabled = false;
             canvas.SetActive(false);
             StartCoroutine(deathTimerRoutine());
         }
