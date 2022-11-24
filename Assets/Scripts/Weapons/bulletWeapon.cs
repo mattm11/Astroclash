@@ -221,7 +221,7 @@ public class bulletWeapon : NetworkBehaviour
     {
         sumDeltaTime += Time.deltaTime;
         float secondsPerRound = 1.0f / controller.getStat("Fire Rate");
-        float energyCost = controller.getStat("Projectile Damage") * controller.getStat("Projectile Count");
+        float energyCost = (controller.getStat("Projectile Damage") * controller.getStat("Projectile Count") / 10.0f);
         float currEnergy = player.GetComponent<playerController>().getEnergy();
 
         float relativeBulletSpeed = controller.getStat("Projectile Speed") + player.GetComponent<playerController>().getVelocity();
@@ -425,39 +425,66 @@ public class bulletWeapon : NetworkBehaviour
     [ServerRpc]
     void fireBulletServerRpc(Vector3 _direction, Vector3 _position, float _projectileSpeed, float _projectileRange, float _projectileDamage, ulong _clientID)
     {
-        createBulletClientRpc(_direction, _position, _projectileSpeed, _projectileRange, _projectileDamage, _clientID);
-    }
-
-    [ClientRpc]
-    void createBulletClientRpc(Vector3 _direction, Vector3 _position, float _projectileSpeed, float _projectileRange, float _projectileDamage, ulong _clientID)
-    {  
         float angle = Mathf.Atan2(_direction.y, _direction.x) * Mathf.Rad2Deg;
         Quaternion rotation = Quaternion.AngleAxis(angle, transform.forward);
 
         GameObject bullet = null;
         bullet = Instantiate(defaultBulletPref, _position, rotation);
         bullet.GetComponent<Rigidbody2D>().AddForce(_direction * _projectileSpeed, ForceMode2D.Impulse);
-        bullet.GetComponent<bulletProjectiles>().setStats(_projectileRange, _projectileDamage, _clientID);
+        bullet.GetComponent<bulletProjectiles>().setStats(_projectileRange, _projectileDamage);
+        bullet.GetComponent<bulletProjectiles>().spawnerID.Value = _clientID;
+        bullet.GetComponent<bulletProjectiles>().isPlayerBullet.Value = true;
+        bullet.GetComponent<NetworkObject>().Spawn();
+
+        ulong bulletID = bullet.GetComponent<NetworkObject>().NetworkObjectId;
+        createBulletClientRpc(bulletID);
+
+        //This needs to happen (server side ignoring collision)
+        GameObject[] players = GameObject.FindGameObjectsWithTag("Player");
+        for (int i = 0; i < players.Length; i++)
+        {
+            Physics2D.IgnoreCollision(players[i].GetComponent<BoxCollider2D>(), bullet.GetComponent<BoxCollider2D>());
+        }
+
+        GameObject[] enemies = GameObject.FindGameObjectsWithTag("Enemy");
+        for (int i = 0; i < enemies.Length; i++)
+        {
+            Physics2D.IgnoreCollision(enemies[i].GetComponent<BoxCollider2D>(), bullet.GetComponent<BoxCollider2D>());
+        }
+    }
+
+    [ClientRpc]
+    void createBulletClientRpc(ulong _bulletID)
+    {   
+        //Should a client have the authority over this?
+        GameObject bullet = NetworkManager.SpawnManager.SpawnedObjects[_bulletID].gameObject;
+        ulong thisClientID = gameObject.transform.parent.transform.parent.gameObject.GetComponent<NetworkObject>().NetworkObjectId;
+        ulong spawnerID = bullet.GetComponent<bulletProjectiles>().spawnerID.Value;
         
-        if (IsOwner && IsServer == false)
+        if (IsOwner)
         {
             Debug.Log("Creating friendly bullet");
             bullet.tag = "friendlyBullet";
-            Physics2D.IgnoreCollision(gameObject.transform.parent.gameObject.GetComponent<BoxCollider2D>(), bullet.GetComponent<CircleCollider2D>()); //ignore trigger also (avoid it from deleting its own bullets)
+            Physics2D.IgnoreCollision(gameObject.transform.parent.gameObject.GetComponent<BoxCollider2D>(), bullet.GetComponent<CircleCollider2D>());
         }
-        
-        if (IsOwner == false && IsServer == false)
+        else
         {
             Debug.Log("Creating enemy bullet");
             bullet.GetComponent<SpriteRenderer>().color = new Color(1.0f, 0.25f, 0.25f);
             bullet.tag = "enemyBullet";
         }
 
-        //This needs to happen
+        //This needs to happen (client side ignore collision)
         GameObject[] players = GameObject.FindGameObjectsWithTag("Player");
         for (int i = 0; i < players.Length; i++)
         {
             Physics2D.IgnoreCollision(players[i].GetComponent<BoxCollider2D>(), bullet.GetComponent<BoxCollider2D>());
+        }
+
+        GameObject[] enemies = GameObject.FindGameObjectsWithTag("Enemy");
+        for (int i = 0; i < enemies.Length; i++)
+        {
+            Physics2D.IgnoreCollision(enemies[i].GetComponent<BoxCollider2D>(), bullet.GetComponent<BoxCollider2D>());
         }
     }
 

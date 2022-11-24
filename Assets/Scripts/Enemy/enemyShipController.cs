@@ -86,16 +86,15 @@ public class enemyShipController : NetworkBehaviour
 
     void OnTriggerEnter2D(Collider2D collider)
     {
-        if (!IsServer && collider.tag == "friendlyBullet")
+        if (IsServer)
+            Debug.Log("Is Player Bullet? " + collider.GetComponent<bulletProjectiles>().isPlayerBullet.Value);
+
+        if (!IsServer && collider.GetComponent<bulletProjectiles>().isPlayerBullet.Value)
         {
-            GameObject.Destroy(collider.gameObject);
             float damage = collider.GetComponent<bulletProjectiles>().getDamage();
-            dealDamageServerRpc(damage);
-        }
-        else if (!IsServer && collider.tag == "enemyBullet" && collider.GetComponent<bulletProjectiles>().isPlayerBullet)
-        {
-            Debug.Log("Deleted enemy bullet");
-            GameObject.Destroy(collider.gameObject);
+            ulong bulletID = collider.GetComponent<NetworkObject>().NetworkObjectId;
+            // collider.gameObject.GetComponent<NetworkObject>().Despawn();
+            dealDamageServerRpc(damage, bulletID);
         }
         
         //kill enemies that enter safe zone
@@ -226,7 +225,7 @@ public class enemyShipController : NetworkBehaviour
         {
             Vector3 direction = targetPlayer.transform.position - gameObject.transform.position;
             direction = Vector3.Normalize(direction);
-            createBulletClientRpc(direction, gameObject.transform.position, bulletSpeed, bulletRange, damage);
+            createBullet(direction, gameObject.transform.position, bulletSpeed, bulletRange, damage);
             
         }
         GameObject[] players = GameObject.FindGameObjectsWithTag("Player");
@@ -237,15 +236,15 @@ public class enemyShipController : NetworkBehaviour
 
     // Network Functions
     [ServerRpc(RequireOwnership = false)]
-    void dealDamageServerRpc(float _damage)
+    void dealDamageServerRpc(float _damage, ulong _bulletID)
     {
         health.Value -= _damage;
+        NetworkManager.SpawnManager.SpawnedObjects[_bulletID].gameObject.GetComponent<NetworkObject>().Despawn();
         updateHealthBarClientRpc();
     }
 
-    [ClientRpc]
-    void createBulletClientRpc(Vector3 _direction, Vector3 _position, float _projectileSpeed, float _projectileRange, float _projectileDamage)
-    {  
+    void createBullet(Vector3 _direction, Vector3 _position, float _projectileSpeed, float _projectileRange, float _projectileDamage)
+    {
         float angle = Mathf.Atan2(_direction.y, _direction.x) * Mathf.Rad2Deg;
         Quaternion rotation = Quaternion.AngleAxis(angle, transform.forward);
 
@@ -253,7 +252,34 @@ public class enemyShipController : NetworkBehaviour
         bullet = Instantiate(bulletPref, _position, rotation);
         bullet.GetComponent<Rigidbody2D>().AddForce(_direction * _projectileSpeed, ForceMode2D.Impulse);
         bullet.GetComponent<bulletProjectiles>().setStats(_projectileRange, _projectileDamage);
-        
+
+        bullet.GetComponent<NetworkObject>().Spawn();
+        ulong bulletID = bullet.GetComponent<NetworkObject>().NetworkObjectId;
+
+        //This needs to happen (fix weird physics issues)
+        GameObject[] players = GameObject.FindGameObjectsWithTag("Player");
+        for (int i = 0; i < players.Length; i++)
+        {
+            Physics2D.IgnoreCollision(players[i].GetComponent<BoxCollider2D>(), bullet.GetComponent<BoxCollider2D>());
+        }
+
+        GameObject[] enemies = GameObject.FindGameObjectsWithTag("Enemy");
+        for (int i = 0; i < enemies.Length; i++)
+        {
+            Physics2D.IgnoreCollision(enemies[i].GetComponent<BoxCollider2D>(), bullet.GetComponent<BoxCollider2D>());
+        }
+
+        //enemy's collider too (concerned about how this will interact with other enemy objects)
+        Physics2D.IgnoreCollision(gameObject.GetComponent<BoxCollider2D>(), bullet.GetComponent<BoxCollider2D>());  //ignore physics based collision box
+        Physics2D.IgnoreCollision(gameObject.GetComponent<BoxCollider2D>(), bullet.GetComponent<CircleCollider2D>()); //ignore trigger also (avoid it from deleting its own bullets)
+
+        createBulletClientRpc(bulletID);
+    }
+
+    [ClientRpc]
+    void createBulletClientRpc(ulong _bulletID)
+    {  
+        GameObject bullet = NetworkManager.SpawnManager.SpawnedObjects[_bulletID].gameObject;
         bullet.GetComponent<SpriteRenderer>().color = new Color(1.0f, 0.25f, 0.25f);
         bullet.tag = "enemyBullet";
 

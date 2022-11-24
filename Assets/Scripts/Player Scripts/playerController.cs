@@ -215,13 +215,11 @@ public class playerController : NetworkBehaviour
             currencyUI.GetComponent<TMP_Text>().text = money.ToString();
             if (inCombat && countDownStaterted == false)
             {
-                Debug.Log("In Combat!");
                 StartCoroutine(combatTimerRoutine());
                 countDownStaterted = true;
             }
             else if (!inCombat)
             {
-                Debug.Log("Out of Combat!");
                 repair();
             }
             
@@ -233,7 +231,6 @@ public class playerController : NetworkBehaviour
 
             healthBar.GetComponent<UIBar>().SetValue(health.Value);
 
-            Debug.Log("Health Frame: " + healthFrameValue);
             if (healthFrameValue != health.Value)
             {
                 setHealthServerRpc(healthFrameValue);
@@ -257,24 +254,10 @@ public class playerController : NetworkBehaviour
         // bullet weapon interaction logic
         if (collider.gameObject.tag == "enemyBullet" && IsOwner)
         {
-            GameObject.Destroy(collider.gameObject);
+            Debug.Log("Hit by enemy bullet!");
             TakeDamage(collider.gameObject.GetComponent<bulletProjectiles>().getDamage());
+            despawnBulletServerRpc(collider.gameObject.GetComponent<NetworkObject>().NetworkObjectId);
             inCombat = true;
-        }
-        else if 
-        (
-            collider.gameObject.tag == "enemyBullet" && IsOwner == false 
-            && gameObject.transform.parent.gameObject.GetComponent<NetworkObject>().NetworkObjectId != collider.gameObject.GetComponent<bulletProjectiles>().getSpawnerID()
-        )
-        {
-            GameObject.Destroy(collider.gameObject);
-        }
-
-        // logic to destroy the bullet that collided with other objects
-        if (collider.gameObject.tag == "friendlyBullet" && IsOwner == false)
-        {
-            GameObject.Destroy(collider.gameObject);
-            Debug.Log("Deleting friendly bullet!");
         }
     }
 
@@ -307,7 +290,6 @@ public class playerController : NetworkBehaviour
         while (combatTimer <= 5.0f)
         {
             combatTimer += Time.deltaTime;
-            Debug.Log("Combat Timer: " + combatTimer);
             yield return null;
         }
         inCombat = false;
@@ -497,6 +479,11 @@ public class playerController : NetworkBehaviour
         };
         loadDeathSceneClientRpc(clientRpcParams);
         GameObject.FindGameObjectWithTag("Spawn Manager").GetComponent<SpawnManager>().despawnEntity(_objectID);
+    }
+    [ServerRpc(RequireOwnership = false)]
+    private void despawnBulletServerRpc(ulong _bulletID)
+    {
+        NetworkManager.SpawnManager.SpawnedObjects[_bulletID].gameObject.GetComponent<NetworkObject>().Despawn();
     }
     [ClientRpc]
     private void spawnDebrisClientRpc(Vector3 _position)

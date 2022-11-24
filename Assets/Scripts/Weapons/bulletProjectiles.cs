@@ -6,10 +6,10 @@ using Unity.Netcode;
 public class bulletProjectiles : NetworkBehaviour
 {
     private float range = 0.0f;
-    private float damage = 0.0f;
-    private ulong clientID;
+    private NetworkVariable<float> damage = new NetworkVariable<float>(0.0f);
+    public NetworkVariable<ulong> spawnerID = new NetworkVariable<ulong>();
+    public NetworkVariable<bool> isPlayerBullet = new NetworkVariable<bool>(false);
     private Vector3 startPosition = new Vector3();
-    public bool isPlayerBullet = false;
 
     void Start()
     {
@@ -21,41 +21,41 @@ public class bulletProjectiles : NetworkBehaviour
     {
         //calculate distance traveled
         float distance = Mathf.Sqrt(Mathf.Pow((transform.position.x - startPosition.x), 2) + Mathf.Pow((transform.position.y - startPosition.y), 2));
-        if (distance > range)
+        if (distance > range && IsServer)
         {
-           GameObject.Destroy(gameObject);
+            NetworkManager.Destroy(gameObject);
         }
     }
 
     private void OnTriggerEnter2D(Collider2D collider)
     {
-        if (collider.gameObject.name == "Space Station")
+        if (collider.gameObject.name == "Space Station" && IsServer)
         {
-            GameObject.Destroy(gameObject);
+            NetworkManager.Destroy(gameObject);
         }
     }
 
     public void setStats(float _range, float _damage, ulong _clientID)
     {
         range = _range;
-        damage = _damage;
-        clientID = _clientID;
-        isPlayerBullet = true;
+        damage.Value = _damage;
+        spawnerID.Value = _clientID;
+        isPlayerBullet.Value = true;
     }
 
     public void setStats(float _range, float _damage)
     {
         range = _range;
-        damage = _damage;
+        damage.Value = _damage;
     }
 
     public float getDamage()
     {
-        return damage;
+        return damage.Value;
     }
 
     public ulong getSpawnerID()
     {
-        return clientID;
+        return spawnerID.Value;
     }
 }

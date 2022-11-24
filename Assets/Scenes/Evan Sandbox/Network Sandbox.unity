@@ -253,8 +253,8 @@ MonoBehaviour:
     Port: 5000
     ServerListenAddress: 0.0.0.0
   DebugSimulator:
-    PacketDelayMS: 0
-    PacketJitterMS: 0
+    PacketDelayMS: 30
+    PacketJitterMS: 30
     PacketDropRate: 0
 --- !u!114 &1474482345
 MonoBehaviour:
@@ -292,6 +292,11 @@ MonoBehaviour:
       OverridingTargetPrefab: {fileID: 0}
     - Override: 0
       Prefab: {fileID: 8245306353196975038, guid: 2549dfa005ffd4146a70147cee963b7a, type: 3}
+      SourcePrefabToOverride: {fileID: 0}
+      SourceHashToOverride: 0
+      OverridingTargetPrefab: {fileID: 0}
+    - Override: 0
+      Prefab: {fileID: 1924747603489284919, guid: 1dea08089e645ef468f21f0d9e5159ec, type: 3}
       SourcePrefabToOverride: {fileID: 0}
       SourceHashToOverride: 0
       OverridingTargetPrefab: {fileID: 0}
@@ -487,7 +492,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2218534318606410996, guid: 1e86db897e6026640840d44a9628adac, type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2218534318606410997, guid: 1e86db897e6026640840d44a9628adac, type: 3}
       propertyPath: GlobalObjectIdHash

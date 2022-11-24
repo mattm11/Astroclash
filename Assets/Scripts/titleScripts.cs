@@ -16,7 +16,7 @@ public class titleScripts : MonoBehaviour
     {
         Debug.Log("Loading Scene: " + _sceneName);
 
-        if (input.text == "")
+        if (input == null || input.text == "")
             playerController.playerName = "Anonymous";
         else
             playerController.playerName = input.text;
