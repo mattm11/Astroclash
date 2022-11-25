@@ -75,7 +75,7 @@ public class bulletWeapon : NetworkBehaviour
     StateRequirement sniperReq = new StateRequirement(
         "Sniper",
         new List<string>() {"Projectile Damage", "Projectile Speed", "Projectile Range"},
-        new List<float>() {10.0f, 10.0f, 15.0f}
+        new List<float>() {10.0f, 7.5f, 15.0f}
     );
 
     StateRequirement shotgunReq = new StateRequirement(
@@ -153,7 +153,7 @@ public class bulletWeapon : NetworkBehaviour
             {
                 shoot();
             }    
-            else if (Input.GetKeyUp(KeyCode.Space) && controller.getState("Sniper") == true)
+            else if (Input.GetKeyUp(KeyCode.Space) && controller.getState("Sniper") == true && player.GetComponent<playerController>().getEnergy() > 0.0f)
             {
                 burst();
             }
@@ -177,9 +177,8 @@ public class bulletWeapon : NetworkBehaviour
                 if (controller.getState("Shotgun"))
                 {
                     controller.setStat("Fire Rate", controller.getStat("Fire Rate") / 1.5f);
-                    controller.setStat("Shot Spread", controller.getStat("Shot Spread") * 2.0f);
-                    controller.setStat("Projectile Damage", controller.getStat("Projectile Damage") / 3.0f);
-                    controller.setStat("Projectile Range", controller.getStat("Projectile Range") / 4.0f);
+                    controller.setStat("Shot Spread", controller.getStat("Shot Spread") * 1.5f);
+                    controller.setStat("Projectile Damage", controller.getStat("Projectile Damage") / 2.0f);
 
                     controller.setStatIncrement("Fire Rate", 0.05f);
                     controller.setStatIncrement("Shot Spread", 0.2f);
@@ -197,21 +196,18 @@ public class bulletWeapon : NetworkBehaviour
                     controller.setStatIncrement("Projectile Damage", 0.25f);
                     controller.setStatIncrement("Projectile Range", 1.0f);
                     controller.setStatIncrement("Projectile Count", 0.15f);
-
-                    // controller.setBulletPrefab(otherBullets[0]);
                 }
                 else if (controller.getState("Sniper"))
                 {
                     controller.setStat("Fire Rate", controller.getStat("Fire Rate") / 1.5f);
                     controller.setStat("Projectile Damage", controller.getStat("Projectile Damage") * 1.5f);
+                    controller.setStat("Projectile Count", controller.getStat("Projectile Count") / 3.0f);
 
                     controller.setStatIncrement("Fire Rate", 0.05f);
                     controller.setStatIncrement("Shot Spread", 0.0f);
                     controller.setStatIncrement("Projectile Damage", 1.5f);
                     controller.setStatIncrement("Projectile Range", 2.0f);
-                    controller.setStatIncrement("Projectile Count", 0.34f);
-
-                    // controller.setBulletPrefab(otherBullets[1]);
+                    controller.setStatIncrement("Projectile Count", 0.15f);
                 }
             }
         }
@@ -555,10 +551,10 @@ public class bulletWeapon : NetworkBehaviour
     //handles burst logic per frame
     void burst()
     {
-        float energyCost = (controller.getStat("Projectile Damage") * controller.getStat("Projectile Count") - (controller.getStat("Fire Rate") * 10));
+        float energyCost = (controller.getStat("Projectile Damage") * controller.getStat("Projectile Count")) * (1.0f / controller.getStat("Fire Rate"));
         float currEnergy = player.GetComponent<playerController>().getEnergy();
 
-        ulong clientID = gameObject.transform.parent.gameObject.GetComponent<NetworkObject>().NetworkObjectId;
+        ulong clientID = gameObject.transform.parent.transform.parent.gameObject.GetComponent<NetworkObject>().NetworkObjectId;
 
         if(currEnergy - energyCost < 0.0f)
         {
@@ -575,7 +571,7 @@ public class bulletWeapon : NetworkBehaviour
 
         //ratio of damage
         float ratio = currEnergy / energyCost;
-        float damage = 0.0f;
+        float damage;
         if (ratio <= 1.0f)
         {
             damage = ratio * controller.getStat("Projectile Damage") * controller.getStat("Projectile Count");

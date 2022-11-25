@@ -13,7 +13,7 @@ public class playerController : NetworkBehaviour
     //acceleration amount per second added to velocity. de-acceleration is 2:1 proportional to acceleration
     private float acceleration = 1.0f;
     //maximum speed of player ship
-    private float maxVelocity = 3.0f;
+    private float maxVelocity = 5.0f;
     private float velocity = 0.0f;
     private Vector3 rotationDieOff = new Vector3(0.0f, 0.0f, 0.0f);
     private int debrisAmount = 3;
@@ -52,6 +52,7 @@ public class playerController : NetworkBehaviour
     private float healthFrameValue;
     private bool inCombat = false;
     private bool countDownStaterted = false;
+    private bool isDead = false;
     private float combatTimer = 0.0f;
 
     // player energy for UI
@@ -229,13 +230,13 @@ public class playerController : NetworkBehaviour
                 recharge();
             }
 
-            healthBar.GetComponent<UIBar>().SetValue(health.Value);
+            healthBar.GetComponent<UIBar>().SetValue(healthFrameValue);
 
             if (healthFrameValue != health.Value)
             {
                 setHealthServerRpc(healthFrameValue);
             }
-            
+
             checkDeath();
         }
     }
@@ -352,12 +353,11 @@ public class playerController : NetworkBehaviour
     }
     private void checkDeath()
     {
-        if (healthFrameValue <= 0)
+        if (healthFrameValue <= 0 && isDead == false)
         {
+            isDead = true;
             spawnDebrisServerRpc(gameObject.transform.position);
-            gameObject.GetComponent<playerController>().enabled = false;
-            gameObject.GetComponent<SpriteRenderer>().enabled = false;
-            gameObject.GetComponent<BoxCollider2D>().enabled = false;
+            disablePlayerServerRpc(gameObject.transform.parent.GetComponent<NetworkObject>().NetworkObjectId);
             canvas.SetActive(false);
             StartCoroutine(deathTimerRoutine());
         }
@@ -399,6 +399,7 @@ public class playerController : NetworkBehaviour
         maxHealth = _maxHealth;
         healthBar.GetComponent<UIBar>().SetMaxValue(maxHealth);
         healthBar.GetComponent<UIBar>().increaseBar();
+        updateUIPlateServerRpc(gameObject.transform.parent.gameObject.GetComponent<NetworkObject>().NetworkObjectId, _maxHealth);
     }
     public float getMaxVelocity()
     {
@@ -485,6 +486,17 @@ public class playerController : NetworkBehaviour
     {
         NetworkManager.SpawnManager.SpawnedObjects[_bulletID].gameObject.GetComponent<NetworkObject>().Despawn();
     }
+    [ServerRpc]
+    private void disablePlayerServerRpc(ulong _playerID)
+    {
+        disablePlayerClientRpc(_playerID);
+    }
+    [ServerRpc]
+    private void updateUIPlateServerRpc(ulong _playerID, float _health)
+    {
+        updateUIPlateClientRpc(_playerID, _health);
+    }
+
     [ClientRpc]
     private void spawnDebrisClientRpc(Vector3 _position)
     {
@@ -501,5 +513,23 @@ public class playerController : NetworkBehaviour
         // SceneManager.LoadScene("DeathScreen");
         SceneManager.LoadScene("DeathScreen");
         GameObject.Destroy(GameObject.Find("Network Manager"));
+    }
+    [ClientRpc]
+    private void disablePlayerClientRpc(ulong _playerID)
+    {
+        GameObject targetPlayer = NetworkManager.SpawnManager.SpawnedObjects[_playerID].transform.Find("Player").gameObject;
+        GameObject UIPlate = NetworkManager.SpawnManager.SpawnedObjects[_playerID].transform.Find("UI Plates").gameObject;
+        targetPlayer.GetComponent<playerController>().enabled = false;
+        targetPlayer.GetComponent<SpriteRenderer>().enabled = false;
+        targetPlayer.GetComponent<BoxCollider2D>().enabled = false;
+        UIPlate.SetActive(false);
+    }
+    [ClientRpc]
+    private void updateUIPlateClientRpc(ulong _playerID, float _health)
+    {
+        Debug.Log("Updating hover health bar");
+        GameObject plateUI = NetworkManager.SpawnManager.SpawnedObjects[_playerID].gameObject.transform.Find("UI Plates").gameObject;
+        GameObject healthbar = plateUI.transform.Find("Health bar").gameObject;
+        healthbar.GetComponent<UIBar>().SetMaxValue(_health);
     }
 }
