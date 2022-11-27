@@ -8,6 +8,8 @@ TagManager:
   - UIModule
   - friendlyBullet
   - enemyBullet
+  - Spawn Manager
+  - Enemy
   layers:
   - Default
   - TransparentFX
@@ -17,7 +19,7 @@ TagManager:
   - UI
   - Bullets
   - Player
-  - 
+  - Enemy
   - 
   - 
   - 

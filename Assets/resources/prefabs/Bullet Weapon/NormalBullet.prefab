@@ -18,7 +18,7 @@ GameObject:
   - component: {fileID: 2388739978541569258}
   - component: {fileID: 8446842418082754125}
   m_Layer: 6
-  m_Name: machineBullet
+  m_Name: NormalBullet
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -33,7 +33,7 @@ Transform:
   m_GameObject: {fileID: 1924747603489284919}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 2.2314453, y: -74.191246, z: -2}
-  m_LocalScale: {x: 0.06, y: 0.06, z: 0}
+  m_LocalScale: {x: 0.06, y: 0.03, z: 0}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
@@ -80,7 +80,7 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
-  m_Sprite: {fileID: 21300000, guid: b7b1ae667645e734da2ae3314cb1d82a, type: 3}
+  m_Sprite: {fileID: 21300000, guid: fe06a265395d0bd4fa0afc513c873476, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -137,18 +137,18 @@ BoxCollider2D:
   m_IsTrigger: 0
   m_UsedByEffector: 0
   m_UsedByComposite: 0
-  m_Offset: {x: 0, y: 0}
+  m_Offset: {x: 1.5422881, y: 0}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
-    oldSize: {x: 2, y: 2}
+    oldSize: {x: 5, y: 5}
     newSize: {x: 2, y: 2}
     adaptiveTilingThreshold: 0.5
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
   serializedVersion: 2
-  m_Size: {x: 2, y: 2}
+  m_Size: {x: 1.7667116, y: 2}
   m_EdgeRadius: 0
 --- !u!58 &2251138276140786891
 CircleCollider2D:
@@ -163,7 +163,7 @@ CircleCollider2D:
   m_IsTrigger: 1
   m_UsedByEffector: 0
   m_UsedByComposite: 0
-  m_Offset: {x: -0.12, y: 0}
+  m_Offset: {x: 1.56, y: 0}
   serializedVersion: 2
   m_Radius: 0.8623134
 --- !u!114 &8268104285820631595
