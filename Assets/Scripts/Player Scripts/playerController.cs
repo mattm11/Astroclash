@@ -31,6 +31,7 @@ public class playerController : NetworkBehaviour
     private GameObject shipUpgradeUI;
     private GameObject spaceStationButton;
     private GameObject currencyUI;
+    // private GameObject scoreBoardUI;
     private GameObject energyBar;
     private GameObject levelUI;
     private GameObject escapeUI;
@@ -47,6 +48,10 @@ public class playerController : NetworkBehaviour
 
     private const float DEFAULT_MAX_HEALTH = 100;
     private float maxHealth = DEFAULT_MAX_HEALTH;
+    // private float health = DEFAULT_MAX_HEALTH;
+    // private int score = 0;
+
+    // private Camera playerCamera;
     // public float health = DEFAULT_MAX_HEALTH;
     public NetworkVariable<float> health = new NetworkVariable<float>(DEFAULT_MAX_HEALTH);
     private float healthFrameValue;
@@ -107,6 +112,7 @@ public class playerController : NetworkBehaviour
 
             energyBar = canvas.transform.Find("Energy Bar").gameObject;
             energyBar.GetComponent<UIBar>().SetMaxValue(maxEnergy);
+            
             //Find weapon objects
             bulletweaponObject = gameObject.transform.Find("BulletWeapon").gameObject;
 
@@ -123,6 +129,9 @@ public class playerController : NetworkBehaviour
 
             //Find the UILogic object
             UILogic = canvas.transform.Find("UILogic").gameObject;
+
+            //Find score board UI
+            scoreBoardUI = canvas.transform.Find("High Score UI").gameObject;
 
             //setup and turn off canvas and event system
             canvas.transform.SetParent(null);
@@ -290,13 +299,16 @@ public class playerController : NetworkBehaviour
     {
         while (combatTimer <= 5.0f)
         {
+            //TODO: call postScore from ScoreBoard object
+            // scoreBoardUI.GetComponent<ScoreBoard>().postScore(_userName, _score)
+            SceneManager.LoadScene("DeathScreen");
             combatTimer += Time.deltaTime;
             yield return null;
         }
         inCombat = false;
         countDownStaterted = false;
     }
-
+    
     private IEnumerator deathTimerRoutine()
     {
         float deathTimer = 0.0f;
@@ -428,6 +440,14 @@ public class playerController : NetworkBehaviour
     public void setRepair(float _repairAmount)
     {
         repairAmount = _repairAmount;
+    }
+    public int getScore()
+    {
+        return score;
+    }
+    public void setScore(int _score)
+    {
+        score = _score;
     }
     [ServerRpc]
     public void setNameServerRpc(string name)

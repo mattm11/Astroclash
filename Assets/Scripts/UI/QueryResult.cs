@@ -5,22 +5,32 @@ using System;
 
 namespace Astroclash
 {
-    public struct QueryResult
+    public class QueryResult
     {
         private List<string> userNames;
         private List<int> playerScores;
+        public int resultCount;
 
-        QueryResult(List<string> _userNames, List<int> _playerScores)
+        public QueryResult(List<string> _userNames, List<int> _playerScores)
         {
             if (_userNames.Count == _playerScores.Count)
             {
                 userNames = _userNames;
                 playerScores = _playerScores;
+
+                resultCount = _userNames.Count;
             }
             else
             {
                 throw new AstroClashDatabaseError("Username and player score arrays have different lengths");
             }
+        }
+
+        public QueryResult(QueryResult _result)
+        {
+            userNames = _result.userNames;
+            playerScores = _result.playerScores;
+            resultCount = _result.resultCount;
         }
 
         public List<string> getUserNames(int _numberOfUsers)
