@@ -5,7 +5,7 @@ using System;
 
 namespace Astroclash
 {
-    public struct QueryResult
+    public class QueryResult
     {
         private List<string> userNames;
         private List<int> playerScores;
@@ -24,6 +24,13 @@ namespace Astroclash
             {
                 throw new AstroClashDatabaseError("Username and player score arrays have different lengths");
             }
+        }
+
+        public QueryResult(QueryResult _result)
+        {
+            userNames = _result.userNames;
+            playerScores = _result.playerScores;
+            resultCount = _result.resultCount;
         }
 
         public List<string> getUserNames(int _numberOfUsers)

@@ -61,6 +61,7 @@ GameObject:
   - component: {fileID: 418930252468561938}
   - component: {fileID: 8532052230261960984}
   - component: {fileID: 4156279827784186044}
+  - component: {fileID: 4645846140518685169}
   m_Layer: 7
   m_Name: Player
   m_TagString: Player
@@ -176,9 +177,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6bc20b440a0bf0b46bd373e8471fc992, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  acceleration: 1
-  maxVelocity: 3
-  velocity: 0
   UILogic: {fileID: 0}
   weaponRegistry:
   - {fileID: 6378874379617464154}
@@ -241,6 +239,18 @@ Rigidbody2D:
   m_SleepingMode: 1
   m_CollisionDetection: 0
   m_Constraints: 0
+--- !u!114 &4645846140518685169
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8637928853064066860}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aff3e902cc09c4c45a4291d04017f671, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &8637928853064066861
 GameObject:
   m_ObjectHideFlags: 0
@@ -348,6 +358,7 @@ GameObject:
   m_Component:
   - component: {fileID: 8637928853980948078}
   - component: {fileID: 4790075894150394394}
+  - component: {fileID: 7637961535023851674}
   m_Layer: 7
   m_Name: Player_Object
   m_TagString: Untagged
@@ -388,6 +399,19 @@ MonoBehaviour:
   AlwaysReplicateAsRoot: 0
   DontDestroyWithOwner: 0
   AutoObjectParentSync: 1
+--- !u!114 &7637961535023851674
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8637928853980948079}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 66d618d6567f7b0489791f1f79e0cecd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  positions: []
 --- !u!1001 &2211999579438321520
 PrefabInstance:
   m_ObjectHideFlags: 0
