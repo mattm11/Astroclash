@@ -220,6 +220,7 @@ GameObject:
   - component: {fileID: 1474482344}
   - component: {fileID: 1474482347}
   - component: {fileID: 1474482348}
+  - component: {fileID: 1474482349}
   m_Layer: 0
   m_Name: Network Manager
   m_TagString: Untagged
@@ -248,7 +249,7 @@ MonoBehaviour:
   m_MaxConnectAttempts: 60
   m_DisconnectTimeoutMS: 30000
   ConnectionData:
-    Address: 129.213.97.163
+    Address: 192.168.0.18
     Port: 5000
     ServerListenAddress: 0.0.0.0
   DebugSimulator:
@@ -331,7 +332,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1474482343}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: c6ebad0ee7535344bbc27f916a80dadc, type: 3}
   m_Name: 
@@ -343,9 +344,21 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1474482343}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 51fa2fd2d0ec07e4487d6250a3d42b16, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &1474482349
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1474482343}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0eaa666921a3fa64a933b69a389d2bf5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
 --- !u!1001 &1627693989

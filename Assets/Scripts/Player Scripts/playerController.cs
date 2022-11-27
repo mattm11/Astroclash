@@ -31,7 +31,7 @@ public class playerController : NetworkBehaviour
     private GameObject shipUpgradeUI;
     private GameObject spaceStationButton;
     private GameObject currencyUI;
-    // private GameObject scoreBoardUI;
+    private GameObject scoreBoardUI;
     private GameObject energyBar;
     private GameObject levelUI;
     private GameObject escapeUI;
@@ -49,7 +49,7 @@ public class playerController : NetworkBehaviour
     private const float DEFAULT_MAX_HEALTH = 100;
     private float maxHealth = DEFAULT_MAX_HEALTH;
     // private float health = DEFAULT_MAX_HEALTH;
-    // private int score = 0;
+    private int score = 0;
 
     // private Camera playerCamera;
     // public float health = DEFAULT_MAX_HEALTH;

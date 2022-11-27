@@ -36,15 +36,15 @@ public class StartServer : MonoBehaviour
     private void createSpawnManagerServerRpc()
     {
         //create the spawn manager
-        Object prefab = Resources.Load("prefabs/Spawn Manager");
+        UnityEngine.Object prefab = Resources.Load("prefabs/Spawn Manager");
         GameObject SpawnManager = (GameObject)Instantiate(prefab, Vector3.zero, Quaternion.identity);
         SpawnManager.GetComponent<NetworkObject>().Spawn();
     }
 
     [ServerRpc]
     private void createEnemyServerRpc()
-    {   
-        Object prefab = Resources.Load("prefabs/Entities/Enemy Minion");
+    {
+        UnityEngine.Object prefab = Resources.Load("prefabs/Entities/Enemy Minion");
         // GameObject enemy;
 
         // for (int i = 0; i < 1; i++)
