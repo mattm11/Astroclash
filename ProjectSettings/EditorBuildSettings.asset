@@ -29,4 +29,7 @@ EditorBuildSettings:
   - enabled: 0
     path: Assets/Scenes/DeathScreen.unity
     guid: f1127aa266eb3564385f5ec1fba3a891
+  - enabled: 0
+    path: Assets/Scenes/Kendrick Sandbox/Local Sandbox.unity
+    guid: f5e5e9b3e6ac877488d97c4a2930f98d
   m_configObjects: {}

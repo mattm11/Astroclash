@@ -10,6 +10,7 @@ TagManager:
   - enemyBullet
   - Spawn Manager
   - Enemy
+  - Asteroid
   layers:
   - Default
   - TransparentFX
