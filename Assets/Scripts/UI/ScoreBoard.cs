@@ -25,10 +25,13 @@ public class ScoreBoard : MonoBehaviour
     {
         List<string> names = result.getUserNames();
         List<int> scores = result.getPlayerScores();
-        for (int i = 0; i < 10; i++)
+        if (names.Count == scores.Count && names.Count == positions.Count)
         {
-            positions[i].GetComponent<TMP_Text>().text = names[i];
-            positions[i].transform.Find("Score").GetComponent<TMP_Text>().text = scores[i].ToString();
+            for (int i = 0; i < 10; i++)
+            {
+                positions[i].GetComponent<TMP_Text>().text = names[i];
+                positions[i].transform.Find("Score").GetComponent<TMP_Text>().text = scores[i].ToString();
+            }
         }
     }
 
