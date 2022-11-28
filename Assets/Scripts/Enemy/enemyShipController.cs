@@ -89,7 +89,7 @@ public class enemyShipController : NetworkBehaviour
         if (IsServer)
             Debug.Log("Is Player Bullet? " + collider.GetComponent<bulletProjectiles>().isPlayerBullet.Value);
 
-        if (!IsServer && collider.GetComponent<bulletProjectiles>().isPlayerBullet.Value)
+        if (!IsServer && collider.GetComponent<bulletProjectiles>() != null && collider.GetComponent<bulletProjectiles>().isPlayerBullet.Value)
         {
             float damage = collider.GetComponent<bulletProjectiles>().getDamage();
             ulong bulletID = collider.GetComponent<NetworkObject>().NetworkObjectId;
