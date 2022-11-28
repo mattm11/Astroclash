@@ -18,7 +18,7 @@ public class playerController : NetworkBehaviour
     private Vector3 rotationDieOff = new Vector3(0.0f, 0.0f, 0.0f);
     private int debrisAmount = 3;
 
-    private float money = 10000.0f;
+    private float money = 5000.0f;
     private float repairAmount = 1.0f; //hull repaired passively per second
     private float rechargeRate = 10.0f;
 
@@ -266,7 +266,9 @@ public class playerController : NetworkBehaviour
         {
             Debug.Log("Hit by enemy bullet!");
             TakeDamage(collider.gameObject.GetComponent<bulletProjectiles>().getDamage());
+            Debug.Log("Despawning Bullet");
             despawnBulletServerRpc(collider.gameObject.GetComponent<NetworkObject>().NetworkObjectId);
+            Debug.Log("Despawned Bullet!");
             inCombat = true;
         }
     }
@@ -299,9 +301,6 @@ public class playerController : NetworkBehaviour
     {
         while (combatTimer <= 5.0f)
         {
-            //TODO: call postScore from ScoreBoard object
-            // scoreBoardUI.GetComponent<ScoreBoard>().postScore(_userName, _score)
-            SceneManager.LoadScene("DeathScreen");
             combatTimer += Time.deltaTime;
             yield return null;
         }
