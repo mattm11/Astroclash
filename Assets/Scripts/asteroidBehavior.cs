@@ -1,6 +1,7 @@
 using UnityEngine;
 using Unity.Netcode;
 using Random = UnityEngine.Random;
+using System.Collections.Generic;
 
 public class asteroidBehavior : NetworkBehaviour
 {
@@ -53,12 +54,6 @@ public class asteroidBehavior : NetworkBehaviour
             direction = -direction.normalized;
             GetComponent<Rigidbody2D>().AddForce(direction * this.velocity);
         }
-        if (!IsServer && collision.collider.GetComponent<bulletProjectiles>().isPlayerBullet.Value)
-        {
-            float damage = collision.collider.GetComponent<bulletProjectiles>().getDamage();
-            ulong bulletID = collision.collider.GetComponent<NetworkObject>().NetworkObjectId;
-            dealDamageServerRpc(damage, bulletID);
-        }
 
         //kill enemies that enter safe zone
         if (IsServer && collision.collider.gameObject.name == "Space Station")
@@ -67,11 +62,29 @@ public class asteroidBehavior : NetworkBehaviour
         }
     }
 
+    private void OnTriggerEnter2D(Collider2D collider)
+    {
+        if (!IsServer && collider.GetComponent<bulletProjectiles>() != null && collider.GetComponent<bulletProjectiles>().isPlayerBullet.Value)
+        {
+            float damage = collider.GetComponent<bulletProjectiles>().getDamage();
+            ulong bulletID = collider.GetComponent<NetworkObject>().NetworkObjectId;
+            dealDamageServerRpc(damage, bulletID);
+        }
+    }
+
     [ServerRpc(RequireOwnership = false)]
     void dealDamageServerRpc(float _damage, ulong _bulletID)
     {
         health.Value -= _damage;
-        NetworkManager.SpawnManager.SpawnedObjects[_bulletID].gameObject.GetComponent<NetworkObject>().Despawn();
+        try
+        {
+            NetworkManager.SpawnManager.SpawnedObjects[_bulletID].gameObject.GetComponent<NetworkObject>().Despawn();
+        }
+        catch (KeyNotFoundException e)
+        {
+            Debug.Log(e.Message);
+        }
+        
         updateHealthBarClientRpc();
     }
 

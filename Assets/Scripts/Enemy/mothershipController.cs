@@ -8,7 +8,7 @@ public class mothershipController : NetworkBehaviour
     private const float MAX_MOTHERSHIP_HEALTH = 500.0f;
     private NetworkVariable<float> health = new NetworkVariable<float>(MAX_MOTHERSHIP_HEALTH);
 
-    private float patrolArea;
+    private float patrolArea = 10.0f;
     private float credits = 10f;
     private int maxMinions = 3;
     private float spawnDistance = 2f;
@@ -17,8 +17,8 @@ public class mothershipController : NetworkBehaviour
     private float bulletSpeed = 10.0f;
     private float damage = 10.0f;
     private float bulletRange = 15.0f;
-    private float fireRate = 500f;
-    private bool hasFired = true;
+    private float fireRate = 1.0f;
+    private bool hasFired = false;
 
     private List<GameObject> minions;
     private GameObject targetPlayer;
@@ -57,9 +57,11 @@ public class mothershipController : NetworkBehaviour
             StartCoroutine(checkDistance(players));
             if (targetPlayer != null)
             {
-                Debug.Log("targetplayer != null, shooting");
                 lookAtPlayer();
-                shoot();
+                if (hasFired == false)
+                {
+                    StartCoroutine(shoot());
+                }
             }
             // Perhaps spreading spawning of minions over time? :D
             if (minions.Count < maxMinions && Random.Range(0f, 1f) < 0.001)
@@ -74,7 +76,13 @@ public class mothershipController : NetworkBehaviour
         float angle = transform.rotation.z + ((Mathf.PI / 2) * (Random.Range(0, 2) * 2 - 1));
         Debug.Log(transform.rotation.z);
         Vector3 spawnPoint = new Vector3(transform.position.x + spawnDistance * Mathf.Cos(angle), transform.position.y + spawnDistance * Mathf.Sin(angle), transform.position.z);
-        minions.Add(GameObject.FindGameObjectWithTag("Spawn Manager").GetComponent<SpawnManager>().spawnEntity("Enemy Minion", spawnPoint));
+        GameObject minion = GameObject.FindGameObjectWithTag("Spawn Manager").GetComponent<SpawnManager>().spawnEntity("Enemy Minion", spawnPoint);
+        minion.transform.Find("Enemy").gameObject.tag = "Enemy";
+        minion.transform.Find("Enemy").gameObject.layer = 8; //enemy player is 8
+        minion.transform.Find("Enemy").GetComponent<enemyShipController>().setAnchor(gameObject.transform.position);
+        //ignore the physics collision of the minions and mother ship
+        Physics2D.IgnoreCollision(gameObject.GetComponent<PolygonCollider2D>(), minion.GetComponentInChildren<BoxCollider2D>());
+        minions.Add(minion);
     }
 
     private void lookAtPlayer()
@@ -143,7 +151,14 @@ public class mothershipController : NetworkBehaviour
     void dealDamageServerRpc(float _damage, ulong _bulletID)
     {
         health.Value -= _damage;
-        NetworkManager.SpawnManager.SpawnedObjects[_bulletID].gameObject.GetComponent<NetworkObject>().Despawn();
+        try
+        {
+            NetworkManager.SpawnManager.SpawnedObjects[_bulletID].gameObject.GetComponent<NetworkObject>().Despawn();
+        }
+        catch (KeyNotFoundException e)
+        {
+            Debug.Log(e.Message);
+        }
         updateHealthBarClientRpc();
     }
 
@@ -156,7 +171,7 @@ public class mothershipController : NetworkBehaviour
 
     private IEnumerator shoot()
     {
-        hasFired = false;
+        hasFired = true;
         sumDeltaTime = 0.0f;
         while (sumDeltaTime < fireRate)
         {
@@ -175,7 +190,7 @@ public class mothershipController : NetworkBehaviour
         GameObject[] players = GameObject.FindGameObjectsWithTag("Player");
         StartCoroutine(checkDistance(players));
 
-        hasFired = true;
+        hasFired = false;
     }
 
     void createBullet(Vector3 _direction, Vector3 _position, float _projectileSpeed, float _projectileRange, float _projectileDamage)
@@ -202,6 +217,12 @@ public class mothershipController : NetworkBehaviour
         for (int i = 0; i < enemies.Length; i++)
         {
             Physics2D.IgnoreCollision(enemies[i].GetComponent<BoxCollider2D>(), bullet.GetComponent<BoxCollider2D>());
+        }
+
+        GameObject[] asteroids = GameObject.FindGameObjectsWithTag("Asteroid");
+        for (int i = 0; i < asteroids.Length; i++)
+        {
+            Physics2D.IgnoreCollision(asteroids[i].GetComponent<BoxCollider2D>(), bullet.GetComponent<BoxCollider2D>());
         }
 
         //enemy's collider too (concerned about how this will interact with other enemy objects)

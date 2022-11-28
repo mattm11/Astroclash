@@ -6,8 +6,8 @@ using Unity.Netcode;
 public class hostileManager : NetworkBehaviour
 {
 
-    private int maxAsteroids = 20;
-    private int maxMotherships = 8;
+    private int maxAsteroids = 40;
+    private int maxMotherships = 12;
     private int maxAsteroidsNearPlayer = 10;
     private int maxMothershipsNearPlayers = 2;
     private float minSpawnRadius = 18f;

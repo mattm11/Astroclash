@@ -12,8 +12,8 @@ GameObject:
   - component: {fileID: 5958664970930011830}
   - component: {fileID: 5958664970930011829}
   - component: {fileID: 5958664970930011828}
-  - component: {fileID: 5958664970930011835}
   - component: {fileID: -8706548466639338647}
+  - component: {fileID: 2951931630167519971}
   m_Layer: 0
   m_Name: Credit
   m_TagString: Untagged
@@ -100,7 +100,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 111b0af95ca69d44582e4c525d367485, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  value: 100
   stayAlive: 500
 --- !u!58 &5958664970930011828
 CircleCollider2D:
@@ -118,19 +117,6 @@ CircleCollider2D:
   m_Offset: {x: -0.010780573, y: 0}
   serializedVersion: 2
   m_Radius: 1.6699116
---- !u!114 &5958664970930011835
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5958664970930011834}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 844526d263b4c134bb325e49372381ea, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  rotationSpeed: 90
 --- !u!114 &-8706548466639338647
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -147,3 +133,16 @@ MonoBehaviour:
   AlwaysReplicateAsRoot: 0
   DontDestroyWithOwner: 0
   AutoObjectParentSync: 1
+--- !u!114 &2951931630167519971
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5958664970930011834}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b9e3d3bc48b3270449d66cbce0766d4d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  rotationSpeed: 90

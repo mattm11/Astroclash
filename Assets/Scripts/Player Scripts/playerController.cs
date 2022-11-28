@@ -503,7 +503,14 @@ public class playerController : NetworkBehaviour
     [ServerRpc(RequireOwnership = false)]
     private void despawnBulletServerRpc(ulong _bulletID)
     {
-        NetworkManager.SpawnManager.SpawnedObjects[_bulletID].gameObject.GetComponent<NetworkObject>().Despawn();
+        try
+        {
+            NetworkManager.SpawnManager.SpawnedObjects[_bulletID].gameObject.GetComponent<NetworkObject>().Despawn();
+        }
+        catch (KeyNotFoundException e)
+        {
+            Debug.Log(e.Message);
+        }
     }
     [ServerRpc]
     private void disablePlayerServerRpc(ulong _playerID)

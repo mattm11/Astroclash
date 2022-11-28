@@ -14,7 +14,7 @@ public class enemyShipController : NetworkBehaviour
     private GameObject targetPlayer = null;
     public GameObject bulletPref = null;
 
-    private Vector3 anchor;
+    public Vector3 anchor;
 
     //random walk
     private float tether = 5.0f;
@@ -43,7 +43,6 @@ public class enemyShipController : NetworkBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        anchor = gameObject.transform.position;
         walkPosition = gameObject.transform.position;
 
         UIPlate = gameObject.transform.parent.Find("UI Plates").gameObject;
@@ -86,7 +85,7 @@ public class enemyShipController : NetworkBehaviour
 
     void OnTriggerEnter2D(Collider2D collider)
     {
-        if (IsServer)
+        if (IsServer && collider.GetComponent<bulletProjectiles>() != null)
             Debug.Log("Is Player Bullet? " + collider.GetComponent<bulletProjectiles>().isPlayerBullet.Value);
 
         if (!IsServer && collider.GetComponent<bulletProjectiles>() != null && collider.GetComponent<bulletProjectiles>().isPlayerBullet.Value)
@@ -117,6 +116,8 @@ public class enemyShipController : NetworkBehaviour
             (float)rightVector.z
         );
 
+        transVector += _anchor;
+
         prevWalkPosition = walkPosition;
         walkPosition = transVector;
     }
@@ -128,6 +129,11 @@ public class enemyShipController : NetworkBehaviour
         Quaternion rotation = Quaternion.AngleAxis(angle, transform.forward);
 
         gameObject.transform.rotation = rotation;
+    }
+
+    public void setAnchor(Vector3 _position)
+    {
+        anchor = _position;
     }
 
     //patrol routine
@@ -239,7 +245,14 @@ public class enemyShipController : NetworkBehaviour
     void dealDamageServerRpc(float _damage, ulong _bulletID)
     {
         health.Value -= _damage;
-        NetworkManager.SpawnManager.SpawnedObjects[_bulletID].gameObject.GetComponent<NetworkObject>().Despawn();
+        try
+        {
+            NetworkManager.SpawnManager.SpawnedObjects[_bulletID].gameObject.GetComponent<NetworkObject>().Despawn();
+        }
+        catch (KeyNotFoundException e)
+        {
+            Debug.Log(e.Message);
+        }
         updateHealthBarClientRpc();
     }
 
@@ -267,6 +280,12 @@ public class enemyShipController : NetworkBehaviour
         for (int i = 0; i < enemies.Length; i++)
         {
             Physics2D.IgnoreCollision(enemies[i].GetComponent<BoxCollider2D>(), bullet.GetComponent<BoxCollider2D>());
+        }
+
+        GameObject[] asteroids = GameObject.FindGameObjectsWithTag("Asteroid");
+        for (int i = 0; i < asteroids.Length; i++)
+        {
+            Physics2D.IgnoreCollision(asteroids[i].GetComponent<BoxCollider2D>(), bullet.GetComponent<BoxCollider2D>());
         }
 
         //enemy's collider too (concerned about how this will interact with other enemy objects)

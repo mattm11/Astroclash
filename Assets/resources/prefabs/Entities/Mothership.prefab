@@ -14,9 +14,10 @@ GameObject:
   - component: {fileID: 2304765428273265330}
   - component: {fileID: 5281525557955265606}
   - component: {fileID: 7307018426383657247}
-  m_Layer: 0
+  - component: {fileID: 7626075671772252522}
+  m_Layer: 8
   m_Name: Ship
-  m_TagString: Untagged
+  m_TagString: Enemy
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -157,7 +158,7 @@ PolygonCollider2D:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 719143234917881783}
-  m_Enabled: 1
+  m_Enabled: 0
   m_Density: 1
   m_Material: {fileID: 0}
   m_IsTrigger: 0
@@ -201,6 +202,32 @@ PolygonCollider2D:
       - {x: 0.52000004, y: -0.85333335}
       - {x: 0.8, y: -0.73333335}
       - {x: 0.97333336, y: -0.62666667}
+--- !u!61 &7626075671772252522
+BoxCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 719143234917881783}
+  m_Enabled: 1
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_UsedByEffector: 0
+  m_UsedByComposite: 0
+  m_Offset: {x: -0.01775974, y: -0.00887984}
+  m_SpriteTilingProperty:
+    border: {x: 0, y: 0, z: 0, w: 0}
+    pivot: {x: 0.5, y: 0.5}
+    oldSize: {x: 1.9466667, y: 1.92}
+    newSize: {x: 1.92, y: 1.9466667}
+    adaptiveTilingThreshold: 0.5
+    drawMode: 0
+    adaptiveTiling: 0
+  m_AutoTiling: 0
+  serializedVersion: 2
+  m_Size: {x: 1.8756272, y: 1.653602}
+  m_EdgeRadius: 0
 --- !u!1 &1886811820916098595
 GameObject:
   m_ObjectHideFlags: 0
@@ -210,7 +237,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 8044185573452633285}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Right Gun
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -291,7 +318,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 6994439091481490913}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Left Gun
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -324,6 +351,10 @@ PrefabInstance:
       propertyPath: GlobalObjectIdHash
       value: 951099334
       objectReference: {fileID: 0}
+    - target: {fileID: 1378936267443075804, guid: c697d4d47797a0143925b738a450b9e9, type: 3}
+      propertyPath: m_Layer
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 3207170565613683399, guid: c697d4d47797a0143925b738a450b9e9, type: 3}
       propertyPath: m_PresetInfoIsWorld
       value: 1
@@ -336,9 +367,33 @@ PrefabInstance:
       propertyPath: m_AnchorMax.y
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 3657461578407859461, guid: c697d4d47797a0143925b738a450b9e9, type: 3}
+      propertyPath: m_Layer
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3657461578407859543, guid: c697d4d47797a0143925b738a450b9e9, type: 3}
+      propertyPath: m_Layer
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3657461578407859584, guid: c697d4d47797a0143925b738a450b9e9, type: 3}
+      propertyPath: m_Layer
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3657461578407859697, guid: c697d4d47797a0143925b738a450b9e9, type: 3}
+      propertyPath: m_Layer
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3657461578407859939, guid: c697d4d47797a0143925b738a450b9e9, type: 3}
+      propertyPath: m_Layer
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 5957627250040242346, guid: c697d4d47797a0143925b738a450b9e9, type: 3}
       propertyPath: m_Name
       value: UI Plates
+      objectReference: {fileID: 0}
+    - target: {fileID: 5957627250040242346, guid: c697d4d47797a0143925b738a450b9e9, type: 3}
+      propertyPath: m_Layer
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6400766538371371170, guid: c697d4d47797a0143925b738a450b9e9, type: 3}
       propertyPath: m_Pivot.x
@@ -422,6 +477,10 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6400766538371371170, guid: c697d4d47797a0143925b738a450b9e9, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8102599094443455980, guid: c697d4d47797a0143925b738a450b9e9, type: 3}
+      propertyPath: m_Layer
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8102599094443455980, guid: c697d4d47797a0143925b738a450b9e9, type: 3}

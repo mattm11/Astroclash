@@ -222,6 +222,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Hostile Manager
       objectReference: {fileID: 0}
+    - target: {fileID: 2696239633394253332, guid: 6e22a4a5b23061243937dfd3b3a3870c, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 6634069597639565815, guid: 6e22a4a5b23061243937dfd3b3a3870c, type: 3}
       propertyPath: m_RootOrder
       value: 1
@@ -343,12 +347,12 @@ MonoBehaviour:
       OverridingTargetPrefab: {fileID: 0}
     - Override: 0
       Prefab: {fileID: 5735409589892230944, guid: b55775230391a3f45af1ae12ddab43f5, type: 3}
-      SourcePrefabToOverride: {fileID: 0}
+      SourcePrefabToOverride: {fileID: 5735409589892230944, guid: b55775230391a3f45af1ae12ddab43f5, type: 3}
       SourceHashToOverride: 0
       OverridingTargetPrefab: {fileID: 0}
     - Override: 0
       Prefab: {fileID: 5958664970930011834, guid: b1197cb6679865c45a4c112c31ed2433, type: 3}
-      SourcePrefabToOverride: {fileID: 0}
+      SourcePrefabToOverride: {fileID: 5958664970930011834, guid: b1197cb6679865c45a4c112c31ed2433, type: 3}
       SourceHashToOverride: 0
       OverridingTargetPrefab: {fileID: 0}
     - Override: 0
@@ -368,6 +372,11 @@ MonoBehaviour:
       OverridingTargetPrefab: {fileID: 0}
     - Override: 0
       Prefab: {fileID: 2696239633394253332, guid: 6e22a4a5b23061243937dfd3b3a3870c, type: 3}
+      SourcePrefabToOverride: {fileID: 0}
+      SourceHashToOverride: 0
+      OverridingTargetPrefab: {fileID: 0}
+    - Override: 0
+      Prefab: {fileID: 5718240467230746242, guid: 4e2871d8640100e4a856b8983601e3f3, type: 3}
       SourcePrefabToOverride: {fileID: 0}
       SourceHashToOverride: 0
       OverridingTargetPrefab: {fileID: 0}
@@ -408,7 +417,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1474482343}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: c6ebad0ee7535344bbc27f916a80dadc, type: 3}
   m_Name: 
@@ -567,7 +576,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2218534318606410996, guid: 1e86db897e6026640840d44a9628adac, type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2218534318606410997, guid: 1e86db897e6026640840d44a9628adac, type: 3}
       propertyPath: GlobalObjectIdHash
