@@ -23,7 +23,7 @@ public class bulletProjectiles : NetworkBehaviour
         float distance = Mathf.Sqrt(Mathf.Pow((transform.position.x - startPosition.x), 2) + Mathf.Pow((transform.position.y - startPosition.y), 2));
         if (distance > range && IsServer)
         {
-            NetworkManager.Destroy(gameObject);
+            gameObject.GetComponent<NetworkObject>().Despawn();
         }
     }
 
@@ -31,7 +31,7 @@ public class bulletProjectiles : NetworkBehaviour
     {
         if (collider.gameObject.name == "Space Station" && IsServer)
         {
-            NetworkManager.Destroy(gameObject);
+            gameObject.GetComponent<NetworkObject>().Despawn();
         }
     }
 
