@@ -2,16 +2,18 @@ using UnityEngine;
 using Unity.Netcode;
 using Random = UnityEngine.Random;
 using System.Collections.Generic;
+using System.Collections;
 
 public class asteroidBehavior : NetworkBehaviour
 {
-    private const float MAX_ASTEROID_HEALTH = 100.0f;
-    private NetworkVariable<float> health = new NetworkVariable<float>(MAX_ASTEROID_HEALTH);
+    public float startingHealth = 0.0f;
+    public string asteriodToSpawn = "";
+    private NetworkVariable<float> health = new NetworkVariable<float>();
 
     public float rotationSpeed = 15f;
     public Vector2 direction;
     public float velocity;
-    private float credits = 100f;
+    public float credits = 100f;
 
     private GameObject healthBar;
     private GameObject UIPlate;
@@ -26,11 +28,17 @@ public class asteroidBehavior : NetworkBehaviour
     private void Start()
     {
         GetComponent<Rigidbody2D>().AddForce(this.direction * this.velocity, ForceMode2D.Impulse);
-
+        gameObject.GetComponent<BoxCollider2D>().enabled = false;
+        if (IsServer)
+        {
+            health.Value = startingHealth;
+        }
         UIPlate = gameObject.transform.parent.transform.Find("UI Plates").gameObject;
         healthBar = UIPlate.transform.Find("Health bar").gameObject;
-        healthBar.GetComponent<UIBar>().SetMaxValue(MAX_ASTEROID_HEALTH);
-        healthBar.GetComponent<UIBar>().SetValue(health.Value);
+        healthBar.GetComponent<UIBar>().SetMaxValue(startingHealth);
+        healthBar.GetComponent<UIBar>().SetValue(startingHealth);
+
+        StartCoroutine(collisionTimer());
     }
 
     private void Update()
@@ -40,9 +48,18 @@ public class asteroidBehavior : NetworkBehaviour
         {
             // despawn object and spawn credit
             ulong netID = gameObject.transform.parent.GetComponent<NetworkObject>().NetworkObjectId;
+            createDebrisClientRpc(gameObject.transform.position);
             GameObject credit = GameObject.FindGameObjectWithTag("Spawn Manager").GetComponent<SpawnManager>().spawnEntity("Credit", gameObject.transform.position);
             credit.GetComponent<CurrencyItem>().setValue(credits);
-            GameObject.FindGameObjectWithTag("Spawn Manager").GetComponent<SpawnManager>().despawnEntity(netID);
+
+            //spawn the new asteriods
+            if (asteriodToSpawn != "")
+            {
+                GameObject.FindGameObjectWithTag("Spawn Manager").GetComponent<SpawnManager>().spawnEntity(asteriodToSpawn, gameObject.transform.position);
+                GameObject.FindGameObjectWithTag("Spawn Manager").GetComponent<SpawnManager>().spawnEntity(asteriodToSpawn, gameObject.transform.position);
+            }
+
+            GameObject.Find("Hostile Manager").GetComponent<hostileManager>().destroyAsteroid(gameObject.transform.parent.gameObject);
         }
     }
 
@@ -72,6 +89,17 @@ public class asteroidBehavior : NetworkBehaviour
         }
     }
 
+    private IEnumerator collisionTimer()
+    {
+        float sumTimeDelta = 0.0f;
+        while (sumTimeDelta < 1.0f)
+        {
+            sumTimeDelta += Time.deltaTime;
+            yield return null;
+        }
+        gameObject.GetComponent<BoxCollider2D>().enabled = true;
+    }
+
     [ServerRpc(RequireOwnership = false)]
     void dealDamageServerRpc(float _damage, ulong _bulletID)
     {
@@ -93,5 +121,14 @@ public class asteroidBehavior : NetworkBehaviour
     {
         Debug.Log("Changing healthbar of enemy");
         healthBar.GetComponent<UIBar>().SetValue(health.Value);
+    }
+    [ClientRpc]
+    private void createDebrisClientRpc(Vector3 _position)
+    {
+        UnityEngine.Object debris = Resources.Load("prefabs/Asteroid Debris");
+        for (int i = 0; i < 3; i++)
+        {
+            Instantiate(debris, _position, Quaternion.identity);
+        }
     }
 }

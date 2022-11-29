@@ -57,13 +57,13 @@ public class hostileManager : NetworkBehaviour
         motherships.Add(GameObject.FindGameObjectWithTag("Spawn Manager").GetComponent<SpawnManager>().spawnEntity("Mothership", spawnLocation));
     }
 
-    void destroyAsteroid(GameObject asteroid)
+    public void destroyAsteroid(GameObject asteroid)
     {
         asteroids.Remove(asteroid);
         GameObject.FindGameObjectWithTag("Spawn Manager").GetComponent<SpawnManager>().despawnEntity(asteroid.GetComponent<NetworkObject>().NetworkObjectId);
     }
 
-    void destroyMothership(GameObject mothership)
+    public void destroyMothership(GameObject mothership)
     {
         motherships.Remove(mothership);
         GameObject.FindGameObjectWithTag("Spawn Manager").GetComponent<SpawnManager>().despawnEntity(mothership.GetComponent<NetworkObject>().NetworkObjectId);
