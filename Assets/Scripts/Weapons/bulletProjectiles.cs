@@ -31,7 +31,8 @@ public class bulletProjectiles : NetworkBehaviour
     {
         if (collider.gameObject.name == "Space Station" && IsServer)
         {
-            gameObject.GetComponent<NetworkObject>().Despawn();
+            GameObject.Destroy(gameObject);
+            //gameObject.GetComponent<NetworkObject>().Despawn();
         }
         else if (collider.gameObject.name == "Boundary" && IsServer)
         {

@@ -165,24 +165,61 @@ public class playerController : NetworkBehaviour
         {
             usernameUI.GetComponent<TMP_Text>().text = networkName.Value.ToString();
 
-            //update the camera origin
-            Vector3 newPosition = playerCamera.transform.position;
-            newPosition.x = gameObject.transform.position.x;
-            newPosition.y = gameObject.transform.position.y;
-            playerCamera.transform.position = newPosition;
-
-            //Movement is broken down into: X = Movement_Speed * cos(rotation_angle) Y = Movement_Speed * sin(rotation_angle)
-            float angle = (float)(transform.eulerAngles.z * (Math.PI / 180));
-            transform.position += new Vector3(velocity * (float)Math.Cos(angle), velocity * (float)Math.Sin(angle), 0) * Time.deltaTime;
-            transform.Rotate(rotationDieOff * Time.deltaTime);
-            rotationDieOff -= rotationDieOff * 0.50f * Time.deltaTime;
-
             int shipLevel = UILogic.GetComponent<shipUpgrades>().getShipLevel();
             int bulletWeaponLevel = bulletweaponObject.GetComponent<bulletWeapon>().getController().getWeaponLevel();
 
             int totalLevel = shipLevel + bulletWeaponLevel;
 
             levelUI.GetComponent<TMP_Text>().text = "Lv. " + totalLevel.ToString();
+
+            if (Input.GetKey(KeyCode.Escape))
+            {
+                escapeUI.SetActive(true);
+            }
+
+            currencyUI.GetComponent<TMP_Text>().text = money.ToString();
+            if (inCombat && countDownStaterted == false)
+            {
+                StartCoroutine(combatTimerRoutine());
+                countDownStaterted = true;
+            }
+            else if (!inCombat)
+            {
+                repair();
+            }
+            
+
+            if (!Input.GetKey(KeyCode.Space))
+            {
+                recharge();
+            }
+
+            healthBar.GetComponent<UIBar>().SetValue(healthFrameValue);
+
+            if (healthFrameValue != health.Value)
+            {
+                setHealthServerRpc(healthFrameValue);
+            }
+
+            checkDeath();
+        }
+    }
+
+    void FixedUpdate()
+    {
+        if (IsOwner)
+        {
+            //Movement is broken down into: X = Movement_Speed * cos(rotation_angle) Y = Movement_Speed * sin(rotation_angle)
+            float angle = (float)(transform.eulerAngles.z * (Math.PI / 180));
+            transform.position += new Vector3(velocity * (float)Math.Cos(angle), velocity * (float)Math.Sin(angle), 0) * Time.deltaTime;
+            transform.Rotate(rotationDieOff * Time.deltaTime);
+            rotationDieOff -= rotationDieOff * 0.50f * Time.deltaTime;
+
+            //update the camera origin
+            Vector3 newPosition = playerCamera.transform.position;
+            newPosition.x = gameObject.transform.position.x;
+            newPosition.y = gameObject.transform.position.y;
+            playerCamera.transform.position = newPosition;
 
             if (Input.GetKey(KeyCode.W))
             {
@@ -216,37 +253,6 @@ public class playerController : NetworkBehaviour
                     velocity = 0.0f;
                 }
             }
-
-            if (Input.GetKey(KeyCode.Escape))
-            {
-                escapeUI.SetActive(true);
-            }
-
-            currencyUI.GetComponent<TMP_Text>().text = money.ToString();
-            if (inCombat && countDownStaterted == false)
-            {
-                StartCoroutine(combatTimerRoutine());
-                countDownStaterted = true;
-            }
-            else if (!inCombat)
-            {
-                repair();
-            }
-            
-
-            if (!Input.GetKey(KeyCode.Space))
-            {
-                recharge();
-            }
-
-            healthBar.GetComponent<UIBar>().SetValue(healthFrameValue);
-
-            if (healthFrameValue != health.Value)
-            {
-                setHealthServerRpc(healthFrameValue);
-            }
-
-            checkDeath();
         }
     }
 
@@ -503,7 +509,14 @@ public class playerController : NetworkBehaviour
     [ServerRpc(RequireOwnership = false)]
     private void despawnBulletServerRpc(ulong _bulletID)
     {
-        NetworkManager.SpawnManager.SpawnedObjects[_bulletID].gameObject.GetComponent<NetworkObject>().Despawn();
+        try
+        {
+            NetworkManager.SpawnManager.SpawnedObjects[_bulletID].gameObject.GetComponent<NetworkObject>().Despawn();
+        }
+        catch (KeyNotFoundException e)
+        {
+            Debug.Log(e.Message);
+        }
     }
     [ServerRpc]
     private void disablePlayerServerRpc(ulong _playerID)

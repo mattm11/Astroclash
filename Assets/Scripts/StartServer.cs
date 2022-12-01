@@ -44,7 +44,7 @@ public class StartServer : MonoBehaviour
     [ServerRpc]
     private void createEnemyServerRpc()
     {
-        UnityEngine.Object prefab = Resources.Load("prefabs/Entities/Enemy Minion");
+        UnityEngine.Object prefab = Resources.Load("prefabs/Entities/Asteroid");
         // GameObject enemy;
 
         // for (int i = 0; i < 1; i++)

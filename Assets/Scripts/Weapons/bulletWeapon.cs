@@ -447,6 +447,12 @@ public class bulletWeapon : NetworkBehaviour
         {
             Physics2D.IgnoreCollision(enemies[i].GetComponent<BoxCollider2D>(), bullet.GetComponent<BoxCollider2D>());
         }
+
+        GameObject[] asteroids = GameObject.FindGameObjectsWithTag("Asteroid");
+        for (int i = 0; i < asteroids.Length; i++)
+        {
+            Physics2D.IgnoreCollision(asteroids[i].GetComponent<BoxCollider2D>(), bullet.GetComponent<BoxCollider2D>());
+        }
     }
 
     [ClientRpc]
@@ -481,6 +487,12 @@ public class bulletWeapon : NetworkBehaviour
         for (int i = 0; i < enemies.Length; i++)
         {
             Physics2D.IgnoreCollision(enemies[i].GetComponent<BoxCollider2D>(), bullet.GetComponent<BoxCollider2D>());
+        }
+
+        GameObject[] asteroids = GameObject.FindGameObjectsWithTag("Asteroid");
+        for (int i = 0; i < asteroids.Length; i++)
+        {
+            Physics2D.IgnoreCollision(asteroids[i].GetComponent<BoxCollider2D>(), bullet.GetComponent<BoxCollider2D>());
         }
     }
 
