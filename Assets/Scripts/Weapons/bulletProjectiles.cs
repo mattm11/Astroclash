@@ -34,6 +34,10 @@ public class bulletProjectiles : NetworkBehaviour
             GameObject.Destroy(gameObject);
             //gameObject.GetComponent<NetworkObject>().Despawn();
         }
+        else if (collider.gameObject.name == "Boundary" && IsServer)
+        {
+            gameObject.GetComponent<NetworkObject>().Despawn();
+        }
     }
 
     public void setStats(float _range, float _damage, ulong _clientID)
