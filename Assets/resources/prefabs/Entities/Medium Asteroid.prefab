@@ -15,6 +15,7 @@ GameObject:
   - component: {fileID: 4379395640974228152}
   - component: {fileID: 9095903302296787857}
   - component: {fileID: 998385254779477012}
+  - component: {fileID: 4834238121873927977}
   m_Layer: 8
   m_Name: Rock
   m_TagString: Asteroid
@@ -275,6 +276,19 @@ BoxCollider2D:
   serializedVersion: 2
   m_Size: {x: 2.9593704, y: 2.8509715}
   m_EdgeRadius: 0
+--- !u!114 &4834238121873927977
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 37779655246909840}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b9e3d3bc48b3270449d66cbce0766d4d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  rotationSpeed: 1
 --- !u!1 &5718240467230746242
 GameObject:
   m_ObjectHideFlags: 0

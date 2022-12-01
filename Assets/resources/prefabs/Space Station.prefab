@@ -12,10 +12,10 @@ GameObject:
   - component: {fileID: 2218534318606410997}
   - component: {fileID: 2218534318606410761}
   - component: {fileID: 2218534318606410760}
-  - component: {fileID: 2218534318606410763}
   - component: {fileID: 2218534318606410765}
   - component: {fileID: 2218534318606410767}
   - component: {fileID: 3740079460896244266}
+  - component: {fileID: 3439519962601015964}
   m_Layer: 0
   m_Name: Space Station
   m_TagString: Untagged
@@ -133,19 +133,6 @@ MonoBehaviour:
   ScaleThreshold: 0.01
   InLocalSpace: 0
   Interpolate: 1
---- !u!114 &2218534318606410763
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2218534318606410996}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 844526d263b4c134bb325e49372381ea, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  rotationSpeed: 0.5
 --- !u!50 &2218534318606410765
 Rigidbody2D:
   serializedVersion: 4
@@ -196,6 +183,19 @@ CircleCollider2D:
   m_Offset: {x: 0.08421035, y: -0.03864579}
   serializedVersion: 2
   m_Radius: 11.881066
+--- !u!114 &3439519962601015964
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2218534318606410996}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b9e3d3bc48b3270449d66cbce0766d4d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  rotationSpeed: 20
 --- !u!1 &3954706708544105996
 GameObject:
   m_ObjectHideFlags: 0
@@ -289,7 +289,7 @@ MeshCollider:
   m_GameObject: {fileID: 3954706708544105996}
   m_Material: {fileID: 0}
   m_IsTrigger: 0
-  m_Enabled: 1
+  m_Enabled: 0
   serializedVersion: 4
   m_Convex: 0
   m_CookingOptions: 30
