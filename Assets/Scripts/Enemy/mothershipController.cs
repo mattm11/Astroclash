@@ -50,7 +50,7 @@ public class mothershipController : NetworkBehaviour
                 ulong netID = gameObject.transform.parent.GetComponent<NetworkObject>().NetworkObjectId;
                 GameObject credit = GameObject.FindGameObjectWithTag("Spawn Manager").GetComponent<SpawnManager>().spawnEntity("Credit", gameObject.transform.position);
                 credit.GetComponent<CurrencyItem>().setValue(credits);
-                GameObject.FindGameObjectWithTag("Spawn Manager").GetComponent<SpawnManager>().despawnEntity(netID);
+                GameObject.Find("Hostile Manager").GetComponent<hostileManager>().destroyMothership(gameObject.transform.parent.gameObject);
             }
 
             GameObject[] players = GameObject.FindGameObjectsWithTag("Player");
@@ -133,7 +133,7 @@ public class mothershipController : NetworkBehaviour
         if (IsServer)
             Debug.Log("Is Player Bullet? " + collider.GetComponent<bulletProjectiles>().isPlayerBullet.Value);
 
-        if (!IsServer && collider.GetComponent<bulletProjectiles>().isPlayerBullet.Value)
+        if (!IsServer && collider.GetComponent<bulletProjectiles>() != null && collider.GetComponent<bulletProjectiles>().isPlayerBullet.Value)
         {
             float damage = collider.GetComponent<bulletProjectiles>().getDamage();
             ulong bulletID = collider.GetComponent<NetworkObject>().NetworkObjectId;
